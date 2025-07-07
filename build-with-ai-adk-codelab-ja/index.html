@@ -1,0 +1,1498 @@
+
+<!doctype html>
+
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+  <meta name="theme-color" content="#4F7DC9">
+  <meta charset="UTF-8">
+  <title>Build with AI Agent Development Kit ハンズオンへようこそ！</title>
+  <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Source+Code+Pro:400|Roboto:400,300,400italic,500,700|Roboto+Mono">
+  <link rel="stylesheet" href="//fonts.googleapis.com/icon?family=Material+Icons">
+  <link rel="stylesheet" href="https://storage.googleapis.com/claat-public/codelab-elements.css">
+  <style>
+    .success {
+      color: #1e8e3e;
+    }
+    .error {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <google-codelab-analytics gaid="UA-49880327-14" ga4id=""></google-codelab-analytics>
+  <google-codelab codelab-gaid=""
+                  codelab-ga4id=""
+                  id="build-with-ai-adk-codelab-ja"
+                  title="Build with AI Agent Development Kit ハンズオンへようこそ！"
+                  environment="web"
+                  feedback-link="">
+    
+      <google-codelab-step label="イントロダクション" duration="5">
+        <p>このハンズオンでは、Googleが提供するオープンソースのフレームワーク <strong>Agent Development Kit (ADK)</strong> を用いて、AIエージェントを開発するプロセスを体験していただきます。ADKは、AIエージェントや多階層のエージェントシステムの開発を簡素化するために設計されており、柔軟性とモジュール性が高いのが特徴です。</p>
+<h2 is-upgraded><strong>このハンズオンで開発するもの</strong></h2>
+<p class="image-container"><img alt="今回開発するAIエージェントの構成図" src="img/cff165a6835ac14e.png"></p>
+<p>本ハンズオンでは、以下の3種類の個性的なAIエージェントを開発します。</p>
+<ul>
+<li><strong>StoryFlowAgent:</strong> ユーザーから与えられたテーマやキーワードを基に、オリジナルの短い物語を創作します。創造的なタスクをこなすエージェントの一例です。</li>
+<li><strong>SyllabusAgent:</strong> 大学のシラバス情報をPDFから読み込み、RAG (Retrieval-Augmented Generation) 技術を用いて、学生からの質問に的確に回答します。専門的な知識ベースを活用するエージェントです。</li>
+<li><strong>ConciergeAgent:</strong> ユーザーからの様々なリクエストを受け付け、その内容を判断し、上記の <code>StoryFlowAgent</code> や <code>SyllabusAgent</code> へと適切にタスクを振り分ける司令塔の役割を担います。</li>
+</ul>
+<h2 is-upgraded><strong>学習内容</strong></h2>
+<p>このハンズオンを通して、以下の技術や概念を学ぶことができます。</p>
+<ul>
+<li><strong>ADKの基本操作:</strong> エージェントの作成からテストまでの一連の流れ</li>
+<li><strong>Google Cloudとの連携:</strong> Cloud Run, Vertex AI, RAG Engineといった強力なサービスとの連携方法</li>
+<li><strong>Function Calling (Tool Calling):</strong> エージェントの能力を拡張するための外部ツール連携</li>
+<li><strong>RAGの実装:</strong> 外部知識を取り込み、より正確な回答を生成するRAGの活用法</li>
+<li><strong>Agent Teamの構築:</strong> 複数のエージェントを協調させて複雑なタスクを解決するアーキテクチャ</li>
+<li><strong>Workflow Agentの設計:</strong> 複数のステップからなる処理を自動化するワークフローの作成</li>
+<li><strong>デプロイメント:</strong> 開発したエージェントをCloud Runにデプロイし、Webアプリケーションとして公開する手順</li>
+</ul>
+<h2 is-upgraded><strong>ご準備いただくもの</strong></h2>
+<ul>
+<li><strong>Google Cloud プロジェクト:</strong> 課金が有効になっているプロジェクトをご用意ください。</li>
+<li><strong>Python環境:</strong> Python 3.10 以降がインストールされている環境。</li>
+<li><strong><code>uv</code></strong><strong>:</strong> 高速なPythonパッケージインストーラー。未インストールの場合はハンズオン内で手順を案内します。</li>
+</ul>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Google Cloudのセットアップ" duration="10">
+        <p>はじめに、ハンズオンを進めるためのGoogle Cloud環境を準備します。</p>
+<h2 is-upgraded><strong>Google Cloud プロジェクトの作成</strong></h2>
+<p><a href="https://console.cloud.google.com/" target="_blank">Google Cloudコンソール</a>にアクセスし、新しいプロジェクトを作成してください。すでにお持ちのプロジェクトを利用しても構いません。</p>
+<p class="image-container"><img alt="新規プロジェクトの作成" src="img/3fa7342a7b422c70.png"></p>
+<p>プロジェクト名などは任意で構いません。 <img alt="新規プロジェクトの作成2" src="img/5124c264fd5bfc6.png"></p>
+<p>このコードラボでは最後にこのプロジェクトを削除する予定です。</p>
+<h2 is-upgraded><strong>Google Cloud SDK のインストール</strong></h2>
+<p>ローカルのPCで開発を進める方は、Google Cloud SDKのインストールが必要です。 まだインストールされていない方は、以下のドキュメントを参考にインストールを行ってください。</p>
+<p><a href="https://cloud.google.com/sdk/docs/install" target="_blank">Google Cloud SDKのインストール</a></p>
+<p>インストール後、<code>gcloud init</code> コマンドで初期設定を行ってください。Cloud Shellをメインで利用される方は、SDKがプリインストールされているため、この手順は不要です。</p>
+<h2 is-upgraded><strong>Cloud Shellの利用方法</strong></h2>
+<p>Cloud Shell は、Google Cloud プロジェクトを管理するためのコマンドラインツールがプリインストールされた仮想マシンです。Web ブラウザから直接利用でき、SDK のインストールなしに <code>gcloud</code> コマンドなどを実行できます。</p>
+<p>Cloud Shell を起動するには、Google Cloud コンソールの右上にあるターミナルアイコンをクリックします。 「承認」を求められますので、内容をよく読んで問題なければ承認してください。</p>
+<p><img alt="Cloud Shellの起動" src="img/b76e6863b78f5e4b.png"> ※ 初回起動は少し時間がかかります。</p>
+<p>Cloud ShellにはVS CodeのOSSバージョン(code-oss)が付属しています。 「エディタを開く」をクリックしてエディタを開いておいてください。</p>
+<h2 is-upgraded><strong>APIの有効化</strong></h2>
+<p>本ハンズオンで利用する各種サービスのAPIを有効化します。以下のコマンドをCloud Shellまたはターミナルで実行してください。</p>
+<pre>gcloud services enable cloudbuild.googleapis.com run.googleapis.com aiplatform.googleapis.com
+</pre>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="開発環境のセットアップ" duration="10">
+        <p>次に、AIエージェントを開発するためのローカル環境（またはCloud Shell環境）を整えます。</p>
+<h2 is-upgraded><strong>Starter Project のクローン</strong></h2>
+<p>ハンズオン用のひな形となるプロジェクトをGitHubからクローンします。</p>
+<pre>git clone https://github.com/soundTricker/build-with-ai-adk-hands-on-starter.git
+cd build-with-ai-adk-hands-on-starter
+</pre>
+<p>このプロジェクトはハンズオンのステップごとにブランチが用意されています。行き詰まった場合は、対応するブランチのコードを確認してみてください。</p>
+<h2 is-upgraded><strong><code>uv</code></strong><strong> のインストールとセットアップ</strong></h2>
+<aside class="special"><p><strong>補足</strong><code>uv</code> は、<code>pip</code> や <code>pip-tools</code> の代替として利用できる、非常に高速なPythonパッケージインストーラーおよびリゾルバーです。Rust製で、大規模なプロジェクトでも高速に動作します。</p>
+</aside>
+<p>以下のコマンドで <code>uv</code> をインストールし、仮想環境の作成と依存関係の同期を行いましょう。</p>
+<pre># cloud shellの場合は sudo をつけて sudo pip install uv としてください。
+pip install uv
+uv venv -p 3.12
+uv sync
+source .venv/bin/activate
+</pre>
+<h2 is-upgraded><strong>環境のテスト</strong></h2>
+<p>正しく環境が準備できているか確認しましょう。 adkコマンドを実行してみます。</p>
+<pre>adk --help
+</pre>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="はじめてのADK: ConciergeAgent" duration="15">
+        <p>いよいよADKを使ったエージェント開発の第一歩です。まずはシンプルな対話を行う <code>ConciergeAgent</code> を作成します。</p>
+<h2 is-upgraded><strong>ConciergeAgent の作成</strong></h2>
+<p><code>adk create</code> コマンドは、エージェントの基本的なファイル構成を自動で生成してくれる便利なコマンドです。</p>
+<pre>adk create ./concierge
+</pre>
+<p>途中で以下のようにモデル名が聞かれるので 2. を選んで後でモデルを設定するようにします。</p>
+<pre>Choose a model for the root agent:
+1. gemini-2.0-flash-001
+2. Other models (fill later)
+Choose model (1, 2): 2
+
+
+Please see below guide to configure other models:
+https://google.github.io/adk-docs/agents/models
+
+
+Agent created in path/to/./concierge:
+- .env
+- __init__.py
+- agent.py
+</pre>
+<aside class="special"><p><strong>各ファイルの説明</strong><code>adk create</code> コマンドによって生成されたファイルは以下の通りです。</p>
+<ul>
+<li><code>.env</code>: 環境変数を定義するファイルです。Google CloudのプロジェクトIDなどを設定します。</li>
+<li><code>__init__.py</code>: Pythonのパッケージであることを示すファイルです。</li>
+<li><code>agent.py</code>: エージェントの主要なロジックを記述するファイルです。ここに <code>instruction</code> やツール、サブエージェントの定義を行います。</li>
+</ul>
+</aside>
+<h2 is-upgraded><strong>.env ファイルの編集</strong></h2>
+<p>プロジェクトの設定情報を記述する <code>.env</code> ファイルを作成します。</p>
+<p>作成した <code>concierge/.env</code> ファイルを開き、以下のように修正します。</p>
+<pre><code language="language-.env" class="language-.env"># Google Cloud の Vertext AIを使うように設定
+GOOGLE_GENAI_USE_VERTEXAI=TRUE
+
+# 作成したGoogle CloudのProjectIDを設定
+GOOGLE_CLOUD_PROJECT={プロジェクトID}
+
+# US Centralにしておきます。(asia-northeast1は使えないモデルが有る)
+GOOGLE_CLOUD_LOCATION=us-central1
+</code></pre>
+<h2 is-upgraded><strong><code>agent.py</code></strong><strong>の編集</strong></h2>
+<p><code>./concierge/agent.py</code> を開き、モデル及び、エージェントの振る舞いを定義する <code>instruction</code> （指示）を編集します。ここでは、丁寧な執事のようなペルソナを設定してみましょう。</p>
+<pre><code language="language-python" class="language-python">from google.adk.agents import Agent
+
+root_agent = Agent(
+    model=&#39;gemini-2.0-flash&#39;,
+    name=&#39;ConciergeAgent&#39;,
+    description=&#39;A helpful assistant for user questions.&#39;,
+    instruction=&#34;&#34;&#34;
+        あなたはユーザーの問い合わせに適切な返答を行うAIコンシェルジュです。
+
+        [ペルソナ]
+        あなたはユーザーの執事です。ユーザーのことを「ご主人様」と呼び、常に丁寧な言葉で冷静で簡潔に返答します。
+
+        [タスク]
+        - ユーザーからの挨拶に対して、心を込めて返答してください。
+        - 上記以外の問いかけに対しては、以下の制約に従って応答してください。
+
+        [制約]
+        - あなたが知らない、または理解できない質問については、正直に「申し訳ございません、ご主人様。その件については分かりかねます。」と答えてください。
+        - [タスク]に記載されていない役割を求められた場合は、「恐れ入りますが、ご主人様。私にはその権限がございません。」と丁寧に返答してください。
+)
+</code></pre>
+<h2 is-upgraded><strong>動作確認</strong></h2>
+<p><code>adk web --reload</code> コマンドを実行すると、開発用のWeb UI(Dev UI)が起動します。このUI上で、作成した <code>ConciergeAgent</code> が <code>instruction</code> 通りに応答するかテストしてみましょう。 ※  <code>--reload</code>オプションはブラウザをリロードするたびに<code>agent</code>を再読込するためのオプションです。</p>
+<pre>adk web --reload
+</pre>
+<p>通常 http://localhost:8000 にアクセスすればDev UIが表示されます。</p>
+<aside class="special"><p> Cloud Shellを利用している場合は、実行後にもうひと手間必要です。</p>
+<ol type="1">
+<li>画面右上にある「ウェブでプレビュー」ボタンをクリック</li>
+</ol>
+<ul>
+<li><img alt="ウェブでプレビュー" src="img/8a1421b21855f172.png"></li>
+</ul>
+<ol type="1" start="2">
+<li>メニューから「ポートを変更」をクリック</li>
+</ol>
+<ul>
+<li><img alt="メニュー" src="img/3c4e849c411b74d3.png"></li>
+</ul>
+<ol type="1" start="3">
+<li>ポートに8000を入力し、変更してプレビューをクリック</li>
+</ol>
+<ul>
+<li><img alt="プレビュー" src="img/59cd7e34c24d6926.png"> するとブラウザタブが新たに表示され、Dev UIが表示されます。</li>
+</ul>
+</aside>
+<aside class="warning"><p><strong>トラブルシューティング</strong></p>
+<ul>
+<li><code>adk</code> コマンドが見つからない <ul>
+<li><code>source .venv/bin/activate</code> はエラーがなく実行できていたか確認 <ul>
+<li>エラーが有るなら内容見て対処</li>
+</ul>
+</li>
+<li><code>uv sync</code> はエラーがなく実行できていたか確認 <ul>
+<li>エラーが有るなら内容見て対処</li>
+</ul>
+</li>
+<li><code>.venv/bin/adk</code>が存在するか確認 <ul>
+<li>無いなら <code>uv add google-adk</code> 実行後再挑戦</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>adk web</code> しても agentが見つからないエラーが発生する <ul>
+<li><code>concierge</code>ディレクトリがあるディレクトリ上で <code>adk web</code>を実行しているか確認</li>
+<li><code>concierge</code>ディレクトリ内に <code>agent.py</code>があるか確認</li>
+</ul>
+</li>
+<li>メッセージを入力しても送信してもエラーが出る <ul>
+<li><code>.env</code>が正しいか確認</li>
+<li>パーミッションエラーの場合は<code>google auth login</code>、<code>google auth application-default login</code>を実行</li>
+</ul>
+</li>
+<li>メッセージがうまく入力できない <ul>
+<li>Dev UIは 2025/07/05 現在あまり日本語入力のUXが良くないです。</li>
+<li>我慢するか別のテキストエディタで文章作ってコピペして対応しましょう</li>
+</ul>
+</li>
+<li>Cloud Shellでエージェントを実行すると <code>string indices must be integers</code> の様なエラーが発生する <ul>
+<li>一度 <code>gcloud auth application-default login</code> を実行してログインしてみてください。</li>
+</ul>
+</li>
+</ul>
+</aside>
+<h2 is-upgraded><strong>Appendix 1: オリジナルのコンシェルジュ</strong></h2>
+<p><code>instruction</code> の <code>[ペルソナ]</code> や <code>[タスク]</code> を自由に変更して、あなただけのユニークなコンシェルジュエージェントを作成してみてください。例えば、関西弁を話すフレンドリーなエージェントなども面白いかもしれません。</p>
+<p>例:</p>
+<pre><code language="language-python" class="language-python">instruction=&#34;&#34;&#34;
+        あなたはユーザーの問い合わせに適切な返答を行うAIコンシェルジュです。
+
+        [ペルソナ]
+        あなたはユーザーの執事です。
+        あなたはロボット執事で少しことば遣いがたどたどしく、
+        ユーザーのことを「ゴシュジンサマ」と呼び、敬語が苦手なので、敬語を話そうとしますが、たまにタメ口になります。
+        語尾は「デス」をつけるようにしてください。
+
+        [タスク]
+        - ユーザーからの挨拶に対して、心を込めて返答してください。
+        - 上記以外の問いかけに対しては、以下の制約に従って応答してください。
+
+        [制約]
+        - あなたが知らない、または理解できない質問については、正直にわからない旨を伝えてください。
+        - [タスク]に記載されていない役割を求められた場合は、できない旨を伝えてください。
+        &#34;&#34;&#34;
+</code></pre>
+<aside class="special"><p><strong>コラム: プロンプトの作成</strong></p>
+<p>プロンプトの作成方法には様々な考え方やフレームワークがあります。 Vertex AIではAgentの作成支援や、プロンプトを作成/管理するためのVertex AI Studioがあります。 「プロンプトを作成」では様々なモデル、プロンプトを作成し比較、プロンプトを保存しておくことができる機能です。LLMによるプロンプトの改善も行ってくれるためぜひ使ってみてください。 <img alt="プロンプトを作成" src="img/3a6442244ed4f686.png"></p>
+</aside>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="はじめてのツール: Function Calling" duration="15">
+        <p>次に、エージェントが外部の機能（ツール）を呼び出す <code>Function Calling</code>（または <code>Tool Calling</code>）について学びます。</p>
+<h2 is-upgraded><strong>Function Calling の必要性</strong></h2>
+<p>試しに、先ほど作成した <code>ConciergeAgent</code> に「現在の時刻は？」と尋ねてみてください。おそらく、正確な時刻を答えることはできないはずです。これは、大規模言語モデルがリアルタイムの情報にアクセスする能力をデフォルトでは持っていないためです。このような限界を、<code>Function Calling</code> を使って克服します。</p>
+<h2 is-upgraded><strong>ツールの作成と利用</strong></h2>
+<p>現在時刻を取得するための簡単なPython関数をツールとして作成し、それを <code>ConciergeAgent</code> に登録します。そして、<code>instruction</code> を更新し、時刻に関する質問が来た際にはそのツールを呼び出して回答するようにエージェントを賢くしていきましょう。</p>
+<h2 is-upgraded><strong><code>tools.py</code></strong><strong> の作成</strong></h2>
+<p><code>concierge</code> ディレクトリ内に <code>tools.py</code> というファイルを作成し、以下のコードを記述します。</p>
+<pre><code language="language-python:concierge/tools.py" class="language-python:concierge/tools.py"># concierge/tools.py
+import datetime
+
+def now_tool():
+    &#34;&#34;&#34;現在の時刻を返します。&#34;&#34;&#34;
+    return datetime.datetime.now().strftime(&#34;%Y年%m月%d日 %H時%M分%S秒&#34;)
+</code></pre>
+<h2 is-upgraded><strong><code>agent.py</code></strong><strong> の更新</strong></h2>
+<p><code>./concierge/agent.py</code> を開き、<code>now_tool</code> をインポートし、<code>root_agent</code> の <code>tools</code> に追加します。また、<code>instruction</code> を更新して、時刻に関する質問が来た際に <code>now_tool</code> を使うように指示します。</p>
+<pre><code language="language-python:concierge/agent.py" class="language-python:concierge/agent.py"># concierge/agent.py
+from google.adk.agents import Agent
+from concierge.tools import now_tool
+
+root_agent = Agent(
+    model=&#39;gemini-2.0-flash&#39;,
+    name=&#39;ConciergeAgent&#39;,
+    description=&#39;A helpful assistant for user questions.&#39;,
+    instruction=&#34;&#34;&#34;
+        あなたはユーザーの問い合わせに適切な返答を行うAIコンシェルジュです。
+
+        [ペルソナ]
+        あなたはユーザーの執事です。ユーザーのことを「ご主人様」と呼び、常に丁寧な言葉で冷静で簡潔に返答します。
+
+        [タスク]
+        - ユーザーからの挨拶に対して、心を込めて返答してください。
+        - 現在時刻に関する質問には、now_tool ツールを使用して正確に答えてください。
+        - 上記以外の問いかけに対しては、以下の制約に従って応答してください。
+
+        [制約]
+        - あなたが知らない、または理解できない質問については、正直に「申し訳ございません、ご主人様。その件については分かりかねます。」と答えてください。
+        - [タスク]に記載されていない役割を求められた場合は、「恐れ入りますが、ご主人様。私にはその権限がございません。」と丁寧に返答してください。
+        &#34;&#34;&#34;,
+    tools=[now_tool]
+)
+</code></pre>
+<h2 is-upgraded><strong>動作確認</strong></h2>
+<p><code>adk web</code>を利用し、現在時刻が答えられるか確認してください。 以下のように <code>now_tool</code> が呼び出されていることが確認してください。</p>
+<p class="image-container"><img alt="now_toolの呼び出し" src="img/3a6442244ed4f686.png"></p>
+<aside class="warning"><p> うまくエージェントが更新されていない場合は一度 <code>adk web</code>を <code>Ctrl + C</code>などで停止し、再起動してください。</p>
+</aside>
+<h2 is-upgraded><strong>Appendix1. 様々なツール</strong></h2>
+<p><code>now_tool</code>は引数が無いツールでした。次は以下のような地域を指定したらテスト用の天気を返すツールを作ってテストしてみましょう。コンシェルジュエージェントの指示は自分で書いてみてください。</p>
+<pre><code language="language-python:" class="language-python:"># concierge/tools.py
+# 以下を追加
+
+def get_weather(city: str) -&gt; dict:
+    &#34;&#34;&#34;
+    指定された都市の現在の天気情報を返します。
+
+    Args:
+        city (str): 天気情報を取得したい都市名。英名で指定してください。 tokyo, new york など
+
+    Returns:
+        dict: 天気情報を含む辞書。成功した場合は天気レポート、失敗した場合はエラーメッセージが含まれます。
+    &#34;&#34;&#34;
+    if city.lower() == &#34;new york&#34;:
+        return {
+            &#34;status&#34;: &#34;success&#34;,
+            &#34;report&#34;: (
+                &#34;The weather in New York is sunny with a temperature of 25 degrees&#34;
+                &#34; Celsius (77 degrees Fahrenheit).&#34;
+            ),
+        }
+    elif city.lower() == &#34;tokyo&#34;:
+        return {
+            &#34;status&#34;: &#34;success&#34;,
+            &#34;report&#34;: (
+                &#34;The weather in Tokyo is cloudy with a temperature of 22 degrees&#34;
+                &#34; Celsius (72 degrees Fahrenheit).&#34;
+
+            ),
+        }      
+    else:
+        return {
+            &#34;status&#34;: &#34;error&#34;,
+            &#34;error_message&#34;: f&#34;Weather information for &#39;{city}&#39; is not available.&#34;,
+        }
+
+
+</code></pre>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="RAG Engineを活用したSyllabusAgent" duration="30">
+        <p>このセクションでは、RAG (Retrieval-Augmented Generation) 技術を用いて、専門的な知識を持つエージェント <code>SyllabusAgent</code> を作成します。</p>
+<h2 is-upgraded><strong>Google CloudのRAG Engineの概要と検索拡張生成（RAG）プロセスの順序</strong></h2>
+<p>Google CloudのRAG Engineは、大規模言語モデル（LLM）がより正確で関連性の高い回答を生成できるようにするためのサービスです。LLMは膨大なデータで学習されていますが、最新の情報や特定のドメインに特化した情報については知識が不足している場合があります。RAG Engineは、このようなLLMの限界を補完し、外部の知識ソースから情報を取得して回答生成に活用する「検索拡張生成（RAG）」のプロセスを効率的に実現します。</p>
+<h3 is-upgraded><strong>検索拡張生成（RAG）プロセスの順序</strong></h3>
+<p class="image-container"><img alt="RAG Engine Diagram" src="img/9c3a43167ec083f7.png"></p>
+<p>RAGプロセスは、主に以下のステップで構成されます。</p>
+<ol type="1">
+<li><strong>インデックス作成 (Indexing):</strong><ul>
+<li><strong>データソースの準備:</strong> まず、RAG Engineに読み込ませるドキュメント（PDF、テキストファイル、ウェブページなど）を準備します。今回のハンズオンでは、シラバスのPDFファイルがこれに該当します。</li>
+<li><strong>チャンキング (Chunking):</strong> 大規模なドキュメントは、LLMが一度に処理できるサイズに分割されます。この分割された単位を「チャンク」と呼びます。</li>
+<li><strong>埋め込み (Embedding):</strong> 各チャンクは、ベクトル埋め込みモデルによって数値のベクトル（埋め込み）に変換されます。この埋め込みは、チャンクの意味内容を多次元空間で表現したもので、意味的に類似したチャンクは空間内で近くに配置されます。</li>
+<li><strong>インデックスの構築:</strong> 生成された埋め込みは、高速な検索を可能にするためにベクトルデータベース（インデックス）に保存されます。</li>
+</ul>
+</li>
+<li><strong>検索 (Retrieval):</strong><ul>
+<li><strong>ユーザーのクエリの埋め込み:</strong> ユーザーからの質問（クエリ）も、インデックス作成時と同じ埋め込みモデルによってベクトルに変換されます。</li>
+<li><strong>関連情報の検索:</strong> クエリの埋め込みとインデックス内のチャンクの埋め込みとの類似度を計算し、最も関連性の高いチャンク（ドキュメントの断片）を検索します。これにより、ユーザーの質問に答えるために必要な情報が外部知識ベースから効率的に抽出されます。</li>
+</ul>
+</li>
+<li><strong>生成 (Generation):</strong><ul>
+<li><strong>プロンプトの構築:</strong> 検索された情報とユーザーの質問、そしてLLMを組み合わせて、最終的な回答を生成します。このステップでは、LLMは検索された情報を「参照」し、その情報に基づいて質問に答えることで、より正確で文脈に即した回答を提供します。</li>
+</ul>
+</li>
+</ol>
+<h2 is-upgraded><strong>RAG Engine のセットアップ</strong></h2>
+<p>事前に利用するシラバスをご自身のGoogle Driveへアップロードしておいてください。 シラバスが無い方は<a href="https://drive.google.com/file/d/1yj9eKr2mN9qHEJ4f7zZO1aSghZIDu6uj/view?usp=drive_link" target="_blank">こちら</a>からダウンロードして使用してください。 Geminiが作成した架空の大学のシラバスです。</p>
+<h3 is-upgraded><strong>コーパスの作成:</strong></h3>
+<ol type="1">
+<li><a href="https://console.cloud.google.com/" target="_blank">Google Cloudコンソール</a>で作成したプロジェクトを表示</li>
+<li>上部の検索窓に「RAG Engine」を入力し表示される「RAG Engine」を選択<br><img alt="検索窓" src="img/8a4fbbf7a4ab4ba.png"></li>
+<li>新しいコーパスを作成します。画面上部の「コーパスを作成」をクリック<br><img alt="新規コーパス作成" src="img/98f5271228cb6c72.png"></li>
+<li>以下のように設定し、Google Driveから選択をクリックし、保存したシラバスをアップロードし「続行」ボタンをクリック <ul>
+<li>リージョン: us-central1</li>
+<li>コーパス名: syllabus<br><img alt="新規コーパス作成2" src="img/eb6fba481af19f79.png"></li>
+</ul>
+</li>
+<li>エンベディングモデルはデフォルト(Text Multilingual Embedding 002)のままにし、ベクトル データベースに「RagManagedベクトルストア」を選択肢選択して「コーパスを作成」ボタンをクリック  (このあとかなり時間がかかります) <img alt="新規コーパス作成3" src="img/17f538fae792cd23.png"></li>
+<li>最後に作成したコーパスのリソース名を保存しておきます。「詳細」タブをクリックし「リソース名」を何処かに保存しておいてください。<br><img alt="コーパスのリソース名" src="img/19098634c2515716.png"></li>
+</ol>
+<aside class="special"><p><strong>コラム: グラウンディングとRAG</strong></p>
+<p>RAG Engineのコーパス作成には時間がかかる場合があります。その間に以下のコラムを読んでみましょう。</p>
+<p>「グラウンディング (Grounding)」と「RAG (Retrieval-Augmented Generation)」は、どちらも大規模言語モデル (LLM) の能力を向上させるための重要な概念ですが、その焦点と役割には違いがあります。</p>
+<p><strong>グラウンディング (Grounding):</strong></p>
+<p>グラウンディングとは、LLMが生成する情報が、信頼できる外部の知識源や事実に基づいていることを保証するプロセスを指します。LLMは学習データに基づいて流暢なテキストを生成できますが、その情報が常に正確であるとは限りません（ハルシネーションの問題）グラウンディングは、LLMの出力を「現実世界」や「特定の情報源」に結びつけ、その信頼性と正確性を高めることを目的とします。</p>
+<ul>
+<li><strong>目的:</strong> LLMの出力の正確性、信頼性、事実に基づいた根拠を保証すること。ハルシネーションの抑制。</li>
+<li><strong>方法:</strong> 外部データベース、ドキュメント、APIなど、信頼できる情報源を参照し、その情報に基づいてLLMが回答を生成するように誘導します。</li>
+<li><strong>例:</strong> 「この製品の仕様は公式ドキュメントに記載されている通りです」「この医療情報は、最新の医学論文に基づいています」といった形で、情報源を明示したり、情報源から得た事実を基に回答を構成したりすること。</li>
+</ul>
+<p><strong>RAG (Retrieval-Augmented Generation):</strong></p>
+<p>RAGは、グラウンディングを実現するための具体的な手法の一つであり、特に「検索」を通じて外部知識をLLMに提供するアプローチです。ユーザーのクエリに関連する情報を外部の知識ベースから検索（Retrieval）し、その検索結果をLLMへのプロンプトに含めて回答を生成（Generation）します。</p>
+<ul>
+<li><strong>目的:</strong> LLMが最新かつ特定のドメイン知識にアクセスできるようにし、より関連性の高い、情報豊富な回答を生成すること。</li>
+<li><strong>方法:</strong><ol type="1">
+<li><strong>検索 (Retrieval):</strong> ユーザーのクエリに基づいて、ベクトルデータベースなどに格納された外部ドキュメントから関連性の高い情報を検索します。</li>
+<li><strong>拡張 (Augmentation):</strong> 検索された情報をLLMへの入力プロンプトに追加（拡張）します。</li>
+<li><strong>生成 (Generation):</strong> 検索された情報とユーザーの質問、そしてLLMを組み合わせて、最終的な回答を生成します。このステップでは、LLMは検索された情報を「参照」し、その情報に基づいて質問に答えることで、より正確で文脈に即した回答を提供します。</li>
+</ol>
+</li>
+<li><strong>例:</strong> ユーザーが「最新のiPhoneのバッテリー持続時間は？」と質問した場合、RAGシステムはまずAppleの公式ウェブサイトや信頼できるレビューサイトからiPhoneのバッテリーに関する情報を検索し、その情報に基づいてLLMが回答を生成します。</li>
+</ul>
+<p>とだらだら書いてますが、正直、様々な説明文を見ても、若干の揺れが見受けられますし、グラウンディングの一つの手法がRAGなので、「それはグラウンディングだ」、「それはRAGだ」とこだわって言ってもしょうがないなーとか筆者は思ったりしてます。</p>
+</aside>
+<h3 is-upgraded><strong>作成したRAG Engineの確認</strong></h3>
+<p>RAG Engineで作成したデータ(コーパス)はVertex AI Studioから簡単に確認できます。</p>
+<ol type="1">
+<li>RAG Engine画面を表示した状態で左メニューから「プロンプトを作成」を選択(別画面を表示してしまった方は検索窓に「プロンプトを作成」を入力して表示される「プロンプトを作成」をクリック)<br><img alt="プロンプト作成画面" src="img/ccb60bd73edf0593.png"></li>
+<li>システム指示に「あなたは大学の学生課です。 ユーザーからのシラバスに関する質問にRAGを用いて答えてください。」を入力</li>
+<li>右メニュー内の「グランディング: 未指定」」スイッチをクリック<br><img alt="グランディング" src="img/7aeb2f8f29532fef.png"></li>
+<li>表示されるメニュー内の「RAG Engine」を選択し、先程作成したコーパスを選択、「保存」ボタンをクリック<br><img alt="保存" src="img/b3fdf5882694f228.png"></li>
+<li>画面下部の「ここにプロンプトを入力します」という部分にシラバスに関する質問を入力してEnter Keyを入力<br><img alt="質問" src="img/26ffacf551b50f6.png"></li>
+</ol>
+<p>回答は返ってきましたか？</p>
+<p>今度はこのRAG Engineと連携したエージェントを作成していきます。</p>
+<h2 is-upgraded><strong>SyllabusAgent の作成</strong></h2>
+<p><code>ConciergeAgent</code> のサブエージェントとして、<code>SyllabusAgent</code> を作成します。</p>
+<pre>adk create ./concierge/sub_agents/syllabus
+</pre>
+<p><code>agent.py</code>が作成されていることを確認します。</p>
+<h2 is-upgraded><strong>Vertex AI RAG Retrieval の利用</strong></h2>
+<p>ADKに組み込まれている <code>VertexAiRagRetrieval</code> ツールを利用して、<code>SyllabusAgent</code> がRAG Engineにアクセスできるように設定します。これにより、エージェントはシラバスの内容に関する質問に答えられるようになります。</p>
+<p>なおRAGを利用するには python moduleの <code>llama_index</code> が必要です。 uvを利用して <code>llama_index</code>を追加しておきます。</p>
+<pre>uv add llama_index
+</pre>
+<aside class="warning"><p><strong>補足: llama_index</strong></p>
+<p>大規模言語モデルを活用したアプリケーション開発を効率化する強力なツールです。 高速なデータ検索、簡単な設定・運用、高い拡張性を特徴とし、様々な用途に適用できます。 が。。。。 ADKでRAG Engineを使う場合は本当は不要です。 不要なのですが、moduleインポートの兼ね合いで、必須になっており、adkのdependencyにも含まれていないため追加インストールが必要になってしまっています。 このあたりはIssueにも登録されています。 https://github.com/google/adk-samples/issues/239</p>
+</aside>
+<p>モジュールの追加が終わったら<code>concierge/sub_agents/syllabus/agent.py</code>を編集します。</p>
+<pre><code language="language-python:concierge/sub_agents/syllabus/agent.py" class="language-python:concierge/sub_agents/syllabus/agent.py">import os
+from google.adk.agents import Agent
+from google.adk.tools.retrieval import VertexAiRagRetrieval
+from vertexai import rag
+
+# RAG EngineのコーパスIDを指定
+# Google CloudコンソールのRAG Engine画面で作成したコーパスのIDを確認してください。
+# 例: projects/your-gcp-project-id/locations/us-central1/ragCorpora/1213423564542
+RAG_CORPUS_ID = &#34;先ほど保存したリソース名&#34;
+
+# VertexAiRagRetrieval ツールを初期化
+# このツールがRAG Engineへの問い合わせを担当します。
+syllabus_retrieval_tool = VertexAiRagRetrieval(
+    name=&#34;SyllabusRetrievalTool&#34;,
+    description=&#34;Use this tool to retrieve syllabus information for the question from the RAG corpus,&#34;,
+    rag_resources=[rag.RagResource(rag_corpus=RAG_CORPUS_ID)],
+)
+
+root_agent = Agent(
+    model=&#39;gemini-2.0-flash&#39;,
+    name=&#39;SyllabusAgent&#39;,
+    description=&#39;大学のシラバスに関する質問に答えるエージェントです。&#39;,
+    instruction=&#34;&#34;&#34;
+        あなたは大学のシラバスに関する質問に答えるAIアシスタントです。
+        ユーザーからの質問に対して、提供されたシラバス情報に基づいて正確に回答してください。
+
+        [タスク]
+        - シラバスに関する質問には、SyllabusRetrievalTool を使用して回答を生成してください。
+        - 質問がシラバスに関連しない場合は、その旨を伝えてください。
+
+        [制約]
+        - シラバス情報にない内容については、推測で回答せず「シラバスにはその情報がありません。」と答えてください。
+        - 常に丁寧な言葉遣いを心がけてください。
+        &#34;&#34;&#34;,
+    tools=[syllabus_retrieval_tool]
+)
+</code></pre>
+<h2 is-upgraded><strong>動作確認</strong></h2>
+<p>以下のコマンドで <code>SyllabusAgent</code> を単体で起動します。 <code>SyllabusAgent</code>を単体で起動するためには、<code>.env</code> を編集する必要があります。コンシェルジュエージェントの<code>.env</code>ファイルをcpして <code>syllabus</code>ディレクトリにおいてください。</p>
+<pre>cp ./concierge/.env ./concierge/sub_agents/syllabus/.env
+</pre>
+<p>準備ができたらDEV UIを起動します。 、シラバスに関する質問（例：「なんか面白そうな講義ある？」）を投げかけて、正しく回答できるかテストします。</p>
+<pre>PYTHONPATH=$(pwd) adk web ./concierge/sub_agents --reload
+</pre>
+<p>シラバスの内容は返ってきましたか？</p>
+<p class="image-container"><img alt="テスト結果" src="img/95853de0f7ad7ccf.png"></p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Agent Teamの構築" duration="20">
+        <p>ここでは、これまで作成したエージェントたちを連携させ、より高度なタスクをこなす <code>Agent Team</code> を構築します。</p>
+<h2 is-upgraded><strong>Sub-Agent と Agent-as-a-Tool</strong></h2>
+<p>ADKでは、エージェントを連携させる方法として主に <code>Sub-Agent(Agent Delegation)</code> と <code>Agent-as-a-Tool</code> の2つのアプローチがあります。それぞれの特徴と使い分けについて解説します。</p>
+<h2 is-upgraded><strong>ADKにおけるSub-Agent (Agent Delegation)</strong></h2>
+<p>ADKにおけるSub-Agentは、親エージェント（Delegator Agent）が特定のタスクを子エージェント（Delegatee Agent）に委任するメカニズムです。これは、複雑な問題をより小さな、管理しやすいサブタスクに分割し、それぞれを専門のエージェントに処理させることで、エージェントシステムの能力と効率を高めることを目的としています。</p>
+<h3 is-upgraded><strong>Sub-Agent の特徴</strong></h3>
+<ul>
+<li><strong>タスクの専門化:</strong> 各Sub-Agentは特定のドメイン知識や機能に特化できます。例えば、<code>SyllabusAgent</code> はシラバスに関する質問に特化し、<code>StoryFlowAgent</code> は物語の生成に特化します。</li>
+<li><strong>自律的な判断:</strong> 親エージェントは、ユーザーのクエリや現在の状況に基づいて、どのSub-Agentにタスクを委任すべきかを自律的に判断します。この判断は、親エージェントの <code>instruction</code> や、必要に応じてツール（例えば、分類ツール）を使用して行われます。</li>
+<li><strong>階層的な構造:</strong> エージェントは階層的に構成され、親エージェントが子エージェントを呼び出し、さらにその子エージェントが別の子エージェントを呼び出すといった多段階の委任も可能です。</li>
+<li><strong>内部的な連携:</strong> Sub-Agentは、親エージェントの内部的な処理フローの一部として機能します。ユーザーは通常、どのSub-Agentが呼び出されたかを意識しません。</li>
+</ul>
+<h3 is-upgraded><strong>Sub-Agent の利用シーン</strong></h3>
+<ul>
+<li><strong>複雑なクエリの処理:</strong> ユーザーの質問が複数の異なる情報ドメインにまたがる場合、それぞれのドメインに対応するSub-Agentに処理を委任することで、より正確で包括的な回答を生成できます。</li>
+<li><strong>ワークフローの分割:</strong> 長い、または複雑なワークフローを複数のステップに分割し、各ステップを異なるSub-Agentに担当させることで、開発とデバッグが容易になります。</li>
+<li><strong>責任の分離:</strong> 各エージェントが明確な責任範囲を持つことで、システムの保守性と拡張性が向上します。</li>
+</ul>
+<h2 is-upgraded><strong>Agent-as-a-Tool</strong></h2>
+<p>ADKにおけるAgent-as-a-Toolは、エージェントを通常のツール（Function Calling）と同様に扱うメカニズムです。これにより、あるエージェントが別のエージェントの機能を、あたかも単一の関数であるかのように呼び出すことができます。これは、エージェントが特定のタスクを実行するために、他のエージェントの専門知識や処理能力を必要とする場合に特に有効です。</p>
+<h3 is-upgraded><strong>Agent-as-a-Tool の特徴</strong></h3>
+<ul>
+<li><strong>明示的な呼び出し:</strong> 親エージェントは、<code>Tool</code> オブジェクトとしてラップされた子エージェントを、その <code>name</code> と <code>description</code> に基づいて明示的に呼び出します。これは、LLMがツールの説明を読み、適切な状況でそのツールを選択するのと同様です。</li>
+<li><strong>入力と出力の標準化:</strong> Agent-as-a-Toolとして機能するエージェントは、通常のツールと同様に、明確な入力パラメータと出力形式を持つことが期待されます。これにより、呼び出し側のエージェントは、ツールとしての子エージェントとの間でデータを容易にやり取りできます。</li>
+<li><strong>モジュール性と再利用性:</strong> 特定の機能を持つエージェントをツールとして定義することで、そのエージェントを複数の親エージェントから再利用できるようになります。これにより、システムのモジュール性が向上し、開発効率が高まります。</li>
+<li><strong>柔軟な連携:</strong> Sub-Agentが親エージェントの内部ロジックに深く統合される傾向があるのに対し、Agent-as-a-Toolはより疎結合な連携を可能にします。これにより、エージェント間の依存関係が減り、システムの変更が容易になります。</li>
+</ul>
+<h3 is-upgraded><strong>Agent-as-a-Tool の利用シーン</strong></h3>
+<ul>
+<li><strong>特定の専門機能の提供:</strong> 例えば、<code>SyllabusAgent</code> がシラバス検索という特定の専門機能を提供する場合、<code>ConciergeAgent</code> はこの機能をツールとして利用し、ユーザーの質問に応じて呼び出します。</li>
+<li><strong>外部サービスとの連携の抽象化:</strong> 実際には複雑な外部サービスとの連携を伴うエージェントを、シンプルなツールとして公開することで、他のエージェントはその複雑さを意識せずに利用できます。</li>
+<li><strong>異なるエージェント間の協調:</strong> 複数の独立したエージェントが互いの機能を必要とする場合、それぞれをツールとして公開することで、柔軟な協調関係を構築できます</li>
+</ul>
+<p>それでは実際に実装していってみましょう。</p>
+<h3 is-upgraded><strong>Sub-Agent の実装</strong></h3>
+<p>ADKでは、親エージェントの <code>sub_agents</code> パラメータに、委任したいエージェントのリストを渡すことでSub-Agentを定義します。</p>
+<p>今回は<code>SyllabusAgent</code> を <code>ConciergeAgent</code> の <code>Sub-Agent</code> として登録します。これにより、<code>ConciergeAgent</code> はシラバスに関する質問が来たと判断した際に、自律的に <code>SyllabusAgent</code> に処理を委任できるようになります。</p>
+<p><strong>補足</strong></p>
+<ul>
+<li>コンシェルジュエージェントと、シラバスエージェントの違いをわかりやすくするために、コンシェルジュエージェントの語尾を「デス」とカタカナにしています。</li>
+<li>また処理の移譲が行われる際に、その旨を伝えるようにしています。(通常は何もなく移譲される)</li>
+</ul>
+<pre><code language="language-python:concierge/agent.py" class="language-python:concierge/agent.py">from google.adk.agents import Agent
+from .tools import now_tool
+from .sub_agents.syllabus.agent import root_agent as syllabus_agent
+
+
+root_agent = Agent(
+    model=&#39;gemini-2.0-flash&#39;,
+    name=&#39;ConciergeAgent&#39;,
+    description=&#39;A helpful assistant for user questions.&#39;,
+    instruction=&#34;&#34;&#34;
+        あなたはユーザーの問い合わせに適切な返答を行うAIコンシェルジュです。
+
+        [ペルソナ]
+        あなたはユーザーの執事です。ユーザーのことを「ご主人様」と呼び、常に丁寧な言葉で冷静で簡潔に返答します。語尾は「デス」としてください。
+
+        [タスク]
+        - ユーザーからの挨拶に対して、心を込めて返答してください。
+        - 現在時刻に関する質問には、now_tool ツールを使用して正確に答えてください。
+        - 他のAgentへ処理を移譲する場合(transfer_to_agentを使う場合)は「私ではわかりかねますので、他のものを呼んでまいります。」と答えてから他のAgentへ処理を委譲してください。
+        - 上記以外の問いかけに対しては、以下の制約に従って応答してください。
+
+        [制約]
+        - あなたが知らない、または理解できない質問については、正直に「申し訳ございません、ご主人様。その件については分かりかねます。」と答えてください。
+        - [タスク]に記載されていない役割を求められた場合は、「恐れ入りますが、ご主人様。私にはその権限がございません。」と丁寧に返答してください。
+        &#34;&#34;&#34;,
+    sub_agents=[syllabus_agent],
+    tools=[now_tool]
+)
+</code></pre>
+<h3 is-upgraded><strong>Sub-Agent のテスト</strong></h3>
+<p><code>adk web --reload</code> コマンドでコンシェルジュエージェントを起動しシラバスの質問を行ってください。</p>
+<p>以下の様に <code>transfer_to_agent</code> が呼ばれて処理がシラバスエージェントへ移譲されていることを確認してください。</p>
+<p class="image-container"><img alt="transfer_to_agentの呼び出し" src="img/4da92c6aa07e2c68.png"></p>
+<p>元のコンシェルジュエージェントへ戻す場合は、その旨を伝えます。</p>
+<p class="image-container"><img alt="transfer_to_agentの呼び出し2" src="img/b127459c48cd4a96.png"></p>
+<aside class="special"><p><strong>コラム: Agent Delegationの仕組み</strong></p>
+<p>Agent Delegationは <code>transfer_to_agent</code> というツールを利用して行われます。 今回 特にinstructionにシラバスエージェントのことを書いてなくても移譲処理が行われているのは<code>sub_agents</code>が存在する場合は、ADKが以下のようなinstructionを自動的に追加しているからです。</p>
+<pre><code language="language-markdown" class="language-markdown">You are an agent. Your internal name is &#34;ConciergeAgent&#34;.
+
+ The description about you is &#34;A helpful assistant for user questions.&#34;
+
+
+You have a list of other agents to transfer to:
+
+
+Agent name: SyllabusAgent
+Agent description: 大学のシラバスに関する質問に答えるエージェントです。
+
+
+If you are the best to answer the question according to your description, you
+can answer it.
+
+If another agent is better for answering the question according to its
+description, call `transfer_to_agent` function to transfer the
+question to that agent. When transferring, do not generate any text other than
+the function call.
+</code></pre>
+<p>上記のようにシラバスエージェントの <code>description</code> が親エージェント(今回はコンシェルジュエージェント)に渡されているので、特に自分で<code>insturction</code>へ記載がなくても処理の移譲が行われているのです。</p>
+</aside>
+<h3 is-upgraded><strong>Agent-as-a-Tool の実装</strong></h3>
+<p><code>SyllabusAgent</code> を <code>ConciergeAgent</code> のツールの一つとして登録する方法も試します。 コンシェルジュエージェントを以下のように実装してください。</p>
+<pre><code language="language-python:concierge/agent.py" class="language-python:concierge/agent.py">from google.adk.agents import Agent
+from google.adk.tools.agent_tool import AgentTool
+from .tools import now_tool
+from .sub_agents.syllabus.agent import root_agent as syllabus_agent
+
+
+
+root_agent = Agent(
+    model=&#39;gemini-2.0-flash&#39;,
+    name=&#39;ConciergeAgent&#39;,
+    description=&#39;A helpful assistant for user questions.&#39;,
+    instruction=&#34;&#34;&#34;
+        あなたはユーザーの問い合わせに適切な返答を行うAIコンシェルジュです。
+
+        [ペルソナ]
+        あなたはユーザーの執事です。ユーザーのことを「ご主人様」と呼び、常に丁寧な言葉で冷静で簡潔に返答します。語尾は「デス」としてください。
+
+        [タスク]
+        - ユーザーからの挨拶に対して、心を込めて返答してください。
+        - 現在時刻に関する質問には、now_tool ツールを使用して正確に答えてください。
+        - シラバスに関する問い合わせは SyllabusAgent ツールを使用して正確に答えてください。
+        - 上記以外の問いかけに対しては、以下の制約に従って応答してください。
+
+        [制約]
+        - あなたが知らない、または理解できない質問については、正直に「申し訳ございません、ご主人様。その件については分かりかねます。」と答えてください。
+        - [タスク]に記載されていない役割を求められた場合は、「恐れ入りますが、ご主人様。私にはその権限がございません。」と丁寧に返答してください。
+        &#34;&#34;&#34;,
+    tools=[now_tool, AgentTool(agent=syllabus_agent)]
+)
+</code></pre>
+<h3 is-upgraded><strong>Agent-as-a-Tool のテスト</strong></h3>
+<p><code>adk web --reload</code> コマンドでコンシェルジュエージェントを起動しシラバスの質問を行ってください。</p>
+<p>以下の様に <code>SyllabusAgent</code> が呼ばれていますが、あくまで返答はコンシェルジュエージェントが行っている点に注目してください。</p>
+<p class="image-container"><img alt="agent-as-a-toolの呼び出し" src="img/1cec29f62dc466fe.png"></p>
+<p>どちらの手段を使うかは、UXや応答時間の違い等を考慮して決定してください。 ADKはこの様に、複数のエージェントを連携させるマルチエージェントシステム(Agent Team)を構築し、疎結合で再利用性の高いエージェントシステムを構築することを得意としているフレームワークです。</p>
+<aside class="special"><p><strong>コラム: ADKの主要3オブジェクト</strong></p>
+<p>今回のハンズオンでは時間の関係で登場しませんが、ADKは大事な3つの主要な動作クラスと2つの大事なオブジェクトが存在します。 ハンズオンを全部書いてみて、全く差し込むところが見つからなかったのでとりあえずここに差し込んでおきます。ゴメンネ！</p>
+<p>Agent(LlmAgent)</p>
+<p>Agentは、ADKにおけるエージェントの基本クラスです。今までも作ってきていますね。 大規模言語モデル（LLM）と連携し、ユーザーからの入力に基づいてタスクを実行したり、情報を提供したりします。 Agentは実際にはLlmAgentと呼ばれるクラスのエイリアスです。 Agentは、以下の主要な要素で構成されます。</p>
+<ul>
+<li><strong>モデル (model):</strong> エージェントが使用するLLMを指定します。</li>
+<li><strong>名前 (name):</strong> エージェントの一意な識別子です。</li>
+<li><strong>説明 (description):</strong> エージェントの目的や機能の簡潔な説明です。</li>
+<li><strong>指示 (instruction):</strong> エージェントの振る舞いや応答のスタイルを定義するプロンプトです。</li>
+<li><strong>ツール (tools):</strong> エージェントが外部システムと連携するために使用する関数やAPIです。</li>
+<li><strong>サブエージェント (sub_agents):</strong> 複雑なタスクを委任するために、他のエージェントを呼び出すことができます。</li>
+</ul>
+<p>Session Service + その他のService</p>
+<p>ADKではServiceクラスと呼ばれるADK内の各種処理に対して機能を提供するクラスがあります。 特にSession Serviceはエージェントとユーザー間の会話の状態（セッション）を管理する役割を担います。これには、会話履歴、エージェントが保持する内部状態（Session State）、ユーザーIDなどが含まれます。Session Serviceは、エージェントが複数のターンにわたって情報を記憶し、複雑なタスクを処理するために使用されます。 Sessionの保存先はSession Serviceの実装クラスにより決まります。通常<code>adk web</code>を引数無しで指定するとメモリ上にセッションを保存する<code>InMemorySessionService</code>が使用されます。 ServiceはSesssion Service以外にLLMによる成果物(画像や動画、音楽など)を保存する<code>Artifact Service</code>、認証に係る処理を行う<code>Credential Service</code>、長期記憶に係る処理を行う<code>Memory Service</code>などがあります。</p>
+<p>Runner</p>
+<p>RunnerはADKエージェントを実行するための主要なインターフェースです。 エージェントの実行環境を抽象化し、セッション管理、イベント処理、ツール呼び出しなどを担当します。 Agentのインスタンスと、各種サービスの紐づけ、Agentの実行処理などを行います。 <code>adk web</code>を利用すると処理が隠されてしまっていますが、自分でAgentを実行したい場合は必須のクラスとなります。</p>
+<p><strong>Session</strong> Sessionは、ユーザーとエージェント間の会話の状態を保持するオブジェクトです。 ユーザーID、会話履歴、エージェントが保持する内部状態（Session State）などが含まれます。 Session Stateは、エージェントが複数のターンにわたって情報を記憶し、 複雑なタスクを処理するために使用されます。Sessionの保存先はSession Serviceによって決定されます。 またSession Stateはエージェント間のデータ共有にも利用されます。</p>
+<p><strong>Event</strong> Eventは、エージェントの実行中に発生する様々な出来事を表すオブジェクトです。 ユーザーからの入力、エージェントの応答、ツールの呼び出し、エラーなど、 エージェントの動作のあらゆる側面がイベントとして表現されます。 イベントは、エージェントの動作を追跡し、デバッグし、分析するために使用されます。</p>
+</aside>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Workflowエージェントの作成" duration="20">
+        <p>複数のステップを順序立てて実行するような、複雑なタスクを自動化するための <code>Workflow Agent</code> の作成方法を学びます。</p>
+<h2 is-upgraded><strong>Workflow Agent とは</strong></h2>
+<p>ADKにおける <code>Workflow Agent</code> は、複数のステップやタスクを順序立てて実行し、複雑な目標を達成するためのエージェントです。単一のプロンプトで完結するエージェントとは異なり、<code>Workflow Agent</code> は内部的に複数のサブタスクに分解し、それぞれを適切なエージェントやツールに委任しながら、最終的な結果を導き出します。これにより、より高度で多段階の処理を自動化することが可能になります。</p>
+<p><code>Workflow Agent</code> は、特に以下のようなシナリオで強力な威力を発揮します。</p>
+<ul>
+<li><strong>複雑な情報収集と分析:</strong> 複数の情報源からデータを収集し、それを統合・分析してレポートを作成する。</li>
+<li><strong>多段階の意思決定:</strong> ユーザーの入力に基づいて複数の選択肢を評価し、最適なパスを決定する。</li>
+<li><strong>クリエイティブなコンテンツ生成:</strong> アイデア出し、アウトライン作成、ドラフト生成、レビューといった一連のプロセスを経て、高品質なコンテンツを生成する。</li>
+</ul>
+<p>ADKでは、<code>Workflow Agent</code> を構築するためのいくつかの基本的なパターンと、それらを組み合わせるための柔軟なメカニズムを提供しています。</p>
+<h3 is-upgraded><strong>基本的なワークフローパターン</strong></h3>
+<p>ADKは、一般的なワークフローパターンをサポートするための抽象化を提供します。</p>
+<ol type="1">
+<li><strong>Sequential Agent (逐次実行):<br></strong><img alt="Sequential Agent" src="img/4a70ad9bb36ddfe7.png"><ul>
+<li><strong>概要:</strong> 最も基本的なワークフローパターンで、複数のステップを定義された順序で一つずつ実行します。前のステップの出力が次のステップの入力となることが一般的です。</li>
+<li><strong>利用シーン:</strong> データの前処理 -&gt; モデルの実行 -&gt; 結果の整形、といった線形的な処理フローに適しています。</li>
+<li><strong>ADKでの実装: </strong><code>SequentialAgent</code> クラスを使用します。各ステップは、独立したエージェントまたはツールとして定義され、リストとして <code>SequentialAgent</code> に渡されます。</li>
+</ul>
+</li>
+<li><strong>Parallel Agent (並列実行):<br></strong><img alt="Parallel Agent" src="img/f388e8723fd81749.png"><ul>
+<li><strong>概要:</strong> 複数のステップを同時に実行し、すべてのステップが完了するのを待ってから次の処理に進みます。これにより、処理時間を短縮できる可能性があります。</li>
+<li><strong>利用シーン:</strong> 複数の情報源から同時にデータを取得する場合や、独立した複数の分析を並行して行う場合などに有効です。</li>
+<li><strong>ADKでの実装: </strong><code>ParallelAgent</code> クラスを使用します</li>
+</ul>
+</li>
+<li><strong>Loop Agent (繰り返し実行):<br></strong><img alt="Loop Agent" src="img/ba438eabebf2394.png"><ul>
+<li><strong>概要:</strong> 特定の条件が満たされるまで、一連のステップを繰り返し実行します。</li>
+<li><strong>利用シーン:</strong> ユーザーからのフィードバックに基づいてコンテンツを修正する、特定の情報が見つかるまで検索を繰り返す、といった反復的なタスクに適しています。</li>
+<li><strong>ADKでの実装: </strong><code>LoopAgent</code> クラスを使用します。ループの終了条件は、通常、エージェントの <code>instruction</code> 内で定義されます。</li>
+</ul>
+</li>
+</ol>
+<p>これらの基本的なパターンを組み合わせることで、非常に複雑なワークフローも構築可能です。例えば、まず並列で情報を収集し、その結果を逐次処理で分析し、必要に応じてループで修正を行う、といった多段階のワークフローが考えられます。</p>
+<h2 is-upgraded><strong>Base Agent を利用したフロー制御</strong></h2>
+<p>ADKの <code>Base Agent</code> は、これらのワークフローパターンを柔軟に制御するための基盤となります。<code>Base Agent</code> を継承したカスタムエージェントを作成することで、開発者は <code>instruction</code> やツール、サブエージェントの組み合わせだけでなく、Pythonコードによる明示的なロジックでワークフローの各ステップを定義し、その実行順序や条件分岐を細かく制御できます。</p>
+<p>これにより、ADKは単なるプロンプトエンジニアリングのフレームワークにとどまらず、複雑なビジネスロジックや意思決定プロセスをAIエージェントに組み込むための強力なツールとなります。</p>
+<h2 is-upgraded><strong>StoryFlowAgent の作成</strong></h2>
+<p>ADKのドキュメントでも紹介されている <code>StoryFlowAgent</code> を題材に、ワークフローを実装します。このエージェントは、「物語の生成」「Critic-Reviserループ(批判家-修正者ループ)」「後処理(文法チェック、文章解析)」といった複数のステップを経て、一つの物語を完成させます。</p>
+<pre>adk create ./concierge/sub_agents/story
+</pre>
+<p><code>agent.py</code>が作成されていることを確認します。 <code>agent.py</code>を以下のように編集します。</p>
+<p>※ 少し大きめなコードなのでコピペで大丈夫です。後でどの様にWorkflow Agentが利用されているか確認してください。</p>
+<pre><code language="language-python:concierge/sub_agents/story/agent.py" class="language-python:concierge/sub_agents/story/agent.py"># Copyright 2025 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the &#34;License&#34;);
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an &#34;AS IS&#34; BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# keisuke oohashi: 一部ハンズオン用に改変
+import logging
+from typing import AsyncGenerator
+from typing_extensions import override
+
+from google.adk.agents import LlmAgent, BaseAgent, LoopAgent, SequentialAgent
+from google.adk.agents.invocation_context import InvocationContext
+from google.genai import types
+from google.adk.sessions import InMemorySessionService
+from google.adk.runners import Runner
+from google.adk.events import Event
+from pydantic import BaseModel, Field
+
+# --- Constants ---
+GEMINI_2_FLASH = &#34;gemini-2.0-flash&#34;
+
+# --- Configure Logging ---
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+
+# --- Custom Orchestrator Agent ---
+class StoryFlowAgent(BaseAgent):
+    &#34;&#34;&#34;
+    ストーリー生成と洗練のためのカスタムエージェント。
+
+    このエージェントは、LLMエージェントのシーケンスを調整して、ストーリーを生成し、
+    批評し、修正し、文法とトーンをチェックし、もしトーンがネガティブであれば
+    ストーリーを再生成する可能性があります。
+    &#34;&#34;&#34;
+
+    # --- Field Declarations for Pydantic ---
+    # Declare the agents passed during initialization as class attributes with type hints
+    story_generator: LlmAgent
+    critic: LlmAgent
+    reviser: LlmAgent
+    grammar_check: LlmAgent
+    tone_check: LlmAgent
+
+    loop_agent: LoopAgent
+    sequential_agent: SequentialAgent
+
+    # model_config は Pydantic の設定（例: arbitrary_types_allowed）を必要に応じて設定できます。
+    # arbitrary_types_allowedはPydanticで許可されてないクラスをプロパティとして持てるようにする設定です。
+    model_config = {&#34;arbitrary_types_allowed&#34;: True}
+
+    def __init__(
+        self,
+        name: str,
+        story_generator: LlmAgent,
+        critic: LlmAgent,
+        reviser: LlmAgent,
+        grammar_check: LlmAgent,
+        tone_check: LlmAgent,
+    ):
+        &#34;&#34;&#34;
+        StoryFlowAgentを初期化します。
+
+        Args:
+            name: エージェントの名前。
+            story_generator: 初期ストーリーを生成するLlmAgent。
+            critic: ストーリーを批評するLlmAgent。
+            reviser: 批評に基づいてストーリーを修正するLlmAgent。
+            grammar_check: 文法をチェックするLlmAgent。
+            tone_check: トーンを分析するLlmAgent。
+        &#34;&#34;&#34;
+
+        loop_agent = LoopAgent(
+            name=&#34;CriticReviserLoop&#34;, sub_agents=[critic, reviser], max_iterations=2
+        )
+        sequential_agent = SequentialAgent(
+            name=&#34;PostProcessing&#34;, sub_agents=[grammar_check, tone_check]
+        )
+
+        sub_agents_list = [
+            story_generator,
+            loop_agent,
+            sequential_agent,
+        ]
+
+        # Pydantic はクラスのアノテーションに基づいて検証し、割り当てます。
+        super().__init__(
+            name=name,
+            story_generator=story_generator,
+            critic=critic,
+            reviser=reviser,
+            grammar_check=grammar_check,
+            tone_check=tone_check,
+            loop_agent=loop_agent,
+            sequential_agent=sequential_agent,
+            sub_agents=sub_agents_list, # sub_agents リストを直接渡します
+        )
+
+    @override
+    async def _run_async_impl(
+        self, ctx: InvocationContext
+    ) -&gt; AsyncGenerator[Event, None]:
+        &#34;&#34;&#34;
+        ストーリーワークフローのカスタムオーケストレーションロジックを実装します。
+        Pydantic によって割り当てられたインスタンス属性（例: self.story_generator）を使用します。
+        &#34;&#34;&#34;
+        logger.info(f&#34;[{self.name}] ストーリー生成ワークフローを開始します。&#34;)
+
+        # 1. 初期ストーリー生成
+        logger.info(f&#34;[{self.name}] StoryGenerator を実行中...&#34;)
+        async for event in self.story_generator.run_async(ctx):
+            logger.info(f&#34;[{self.name}] StoryGenerator からのイベント: {event.model_dump_json(indent=2, exclude_none=True)}&#34;)
+            yield event
+
+        # 続行する前にストーリーが生成されたか確認
+        if &#34;current_story&#34; not in ctx.session.state or not ctx.session.state[&#34;current_story&#34;]:
+             logger.error(f&#34;[{self.name}] 初期ストーリーの生成に失敗しました。ワークフローを中断します。&#34;)
+             return # 初期ストーリーが失敗した場合、処理を停止
+
+        logger.info(f&#34;[{self.name}] ジェネレーター後のストーリーの状態: {ctx.session.state.get(&#39;current_story&#39;)}&#34;)
+
+
+        # 2. 批評家-修正者ループ
+        logger.info(f&#34;[{self.name}] CriticReviserLoop を実行中...&#34;)
+        # 初期化時に割り当てられた loop_agent インスタンス属性を使用
+        async for event in self.loop_agent.run_async(ctx):
+            logger.info(f&#34;[{self.name}] CriticReviserLoop からのイベント: {event.model_dump_json(indent=2, exclude_none=True)}&#34;)
+            yield event
+
+        logger.info(f&#34;[{self.name}] ループ後のストーリーの状態: {ctx.session.state.get(&#39;current_story&#39;)}&#34;)
+
+        # 3. 逐次後処理（文法とトーンのチェック）
+        logger.info(f&#34;[{self.name}] PostProcessing を実行中...&#34;)
+        # 初期化時に割り当てられた sequential_agent インスタンス属性を使用
+        async for event in self.sequential_agent.run_async(ctx):
+            logger.info(f&#34;[{self.name}] PostProcessing からのイベント: {event.model_dump_json(indent=2, exclude_none=True)}&#34;)
+            yield event
+
+        # 4. トーンに基づく条件ロジック
+        tone_check_result = ctx.session.state.get(&#34;tone_check_result&#34;)
+        logger.info(f&#34;[{self.name}] トーンチェック結果: {tone_check_result}&#34;)
+
+        if tone_check_result == &#34;negative&#34;:
+            logger.info(f&#34;[{self.name}] トーンがネガティブです。ストーリーを再生成します...&#34;)
+            async for event in self.story_generator.run_async(ctx):
+                logger.info(f&#34;[{self.name}] StoryGenerator からのイベント (再生成): {event.model_dump_json(indent=2, exclude_none=True)}&#34;)
+                yield event
+        else:
+            logger.info(f&#34;[{self.name}] トーンはネガティブではありません。現在のストーリーを維持します。&#34;)
+            pass
+
+        logger.info(f&#34;[{self.name}] ワークフローが完了しました。&#34;)
+
+# --- 個々のLLMエージェントを定義 ---
+story_generator = LlmAgent(
+    name=&#34;StoryGenerator&#34;,
+    model=GEMINI_2_FLASH,
+    instruction=&#34;&#34;&#34;あなたは物語作家です。ユーザによって提供されたトピックに基づいて、猫についての短い物語（約200語）を書いてください。&#34;&#34;&#34;,
+    input_schema=None,
+    output_key=&#34;current_story&#34;,  # Key for storing output in session state
+)
+
+critic = LlmAgent(
+    name=&#34;Critic&#34;,
+    model=GEMINI_2_FLASH,
+    instruction=&#34;&#34;&#34;あなたは物語の批評家です。Session Stateの &#39;current_story&#39; キーで提供された物語をレビューしてください。
+物語を改善する方法について、1〜2文の建設的な批判を提供してください。プロットまたはキャラクターに焦点を当ててください。&#34;&#34;&#34;,
+    input_schema=None,
+    output_key=&#34;criticism&#34;,  # Key for storing criticism in session state
+)
+
+reviser = LlmAgent(
+    name=&#34;Reviser&#34;,
+    model=GEMINI_2_FLASH,
+    instruction=&#34;&#34;&#34;あなたは物語の修正者です。Session Stateの &#39;current_story&#39; キーで提供された物語を、
+セッション状態の &#39;criticism&#39; キーにある批判に基づいて修正してください。修正された物語のみを出力してください。&#34;&#34;&#34;,
+    input_schema=None,
+    output_key=&#34;current_story&#34;,  # Overwrites the original story
+)
+
+grammar_check = LlmAgent(
+    name=&#34;GrammarCheck&#34;,
+    model=GEMINI_2_FLASH,
+    instruction=&#34;&#34;&#34;あなたは文法チェッカーです。Session Stateの &#39;current_story&#39; キーで提供された物語の文法をチェックしてください。
+提案された修正点をリストとしてのみ出力するか、エラーがない場合は「文法は良好です！」と出力してください。&#34;&#34;&#34;,
+    input_schema=None,
+    output_key=&#34;grammar_suggestions&#34;,
+)
+
+tone_check = LlmAgent(
+    name=&#34;ToneCheck&#34;,
+    model=GEMINI_2_FLASH,
+    instruction=&#34;&#34;&#34;あなたはトーンアナライザーです。Session Stateの &#39;current_story&#39; キーで提供された物語のトーンを分析してください。
+トーンが一般的にポジティブな場合は「positive」、一般的にネガティブな場合は「negative」、
+それ以外の場合は「neutral」という単語のみを出力してください。&#34;&#34;&#34;,
+    input_schema=None,
+    output_key=&#34;tone_check_result&#34;, # This agent&#39;s output determines the conditional flow
+)
+
+# --- カスタムエージェントインスタンスを作成 ---
+root_agent = StoryFlowAgent(
+    name=&#34;StoryFlowAgent&#34;,
+    story_generator=story_generator,
+    critic=critic,
+    reviser=reviser,
+    grammar_check=grammar_check,
+    tone_check=tone_check,
+)
+</code></pre>
+<h2 is-upgraded><strong>動作確認</strong></h2>
+<p><code>StoryFlowAgent</code> が正しく物語を生成できるか、単体でテストします。</p>
+<p>毎度になりますが、単体で動かすためには <code>./concierge/sub_agents/story/.env</code> を修正する必要があります。</p>
+<pre>cp ./concierge/.env ./concierge/sub_agents/story/.env
+</pre>
+<p>上記を行ったあと、<code>adk web</code>でエージェントを起動します。</p>
+<pre>PYTHONPATH=$(pwd) adk web ./concierge/sub_agents
+</pre>
+<p>現在<code>sub_agents</code>ディレクトリ内には複数のエージェントが存在するため、Dev UI右上の「Select an anget」から<code>story</code>を選択します。</p>
+<p>選択後作ってもらいたいストーリーのトピックを入力してストーリーを作成してみてください。 すると以下のような結果が表示されます。</p>
+<p class="image-container"><img alt="ストーリエージェント" src="img/7c3e6cbb6ca244c8.png"></p>
+<p>これは</p>
+<ol type="1">
+<li>StoryGeneratorがストーリーのベースを作成</li>
+<li>CriticReviserLoopによるループ</li>
+<li>Critic(批判家)が内容を評価し修正点を上げる</li>
+<li>Reviser(修正者)が批判家の修正点を修正 * これを2回繰り返し</li>
+<li>PostProcessingによる後処理</li>
+<li>GrammarCheckによる文法チェック</li>
+<li>ToneCheckによる文章の分析(ポジティブかネガディブか)</li>
+</ol>
+<p>というワークフローが実施されています。 様々エージェントを実行しており、<code>StoryFlowAgent</code>の内部では、<code>yield event</code>という形で、途中経過をユーザーに返却しています。 この為、Dev UI上でも返却された<code>event</code>がすべて表示されています。</p>
+<aside class="special"><p><strong>コラム: Tracing</strong></p>
+<p>この様な複雑なワークフローでは、処理を追うのが大変です。 ADKではこういったどの様な処理が行われているのか追跡しやすくするために、Tracing機能が用意されています。 Tracing機能はDev UIの「Event」タブ-&gt;「Trace」-&gt;「Invocation ID」を選択することでTrace情報を表示することができます。 <img alt="トレース1" src="img/b4d7156de607b902.png"><img alt="トレース2" src="img/1ca8542f74276afe.png"></p>
+</aside>
+<aside class="special"><p><strong>さらにコラム: TracingとOpenTelemetry</strong></p>
+<p>実際のシステム開発の現場でも問題解決やパフォーマンス調査など様々な用途でこういったTracing機能を利用しています。 この様な追跡可能な状態(追跡可能性)のことを「トレーサビリティ」といいます。 また「トレース」に加えて「ログ」や「メトリック(状態の数値化)」を観測可能にすること(観測可能にする能力/観測可能性)のことをオブザーバビリティといいます。 このオブザーバビリティはアプリケーションやシステムにおいて、機能にかかわらず、どの様なシステムでも必要なため、様々なベンダーが儲かるのでシステムやアプリケーションを出しています。 ADKでは <a href="https://opentelemetry.io/ja/" target="_blank">OpenTelemetry</a>(otel) と呼ばれるソフトウェア(ライブラリ)を利用して、各種メトリックやトレース情報の保存を行っています。 OpenTelemetryはベンダーに対して中立で開発されているオープンソースのクラウドネイティブアプリケーション向けオブザーバビリティフレームワークで、広く利用されています。 個人開発やアプリケーション開発のみを行っているとあまり知識として登場しませんが、頭の片隅においておいてください。</p>
+</aside>
+<h2 is-upgraded><strong>ConciergeAgent との最終的な連携</strong></h2>
+<p>Agent開発の最後に<code>ConciergeAgent</code> の <code>instruction</code> を更新し、<code>StoryFlowAgent</code> をツールとして登録します。これにより、ユーザーが「〇〇についての物語を書いて」とリクエストすると、<code>ConciergeAgent</code> が <code>StoryFlowAgent</code> を呼び出して物語を生成する、という一連の流れが完成します。</p>
+<p><code>concierge/agent.py</code>を修正します。</p>
+<pre><code language="language-python:concierge/agent.py" class="language-python:concierge/agent.py">from google.adk.agents import Agent
+from google.adk.tools.agent_tool import AgentTool
+from .tools import now_tool
+from .sub_agents.syllabus.agent import root_agent as syllabus_agent
+from .sub_agents.story.agent import root_agent as story_agent
+
+
+root_agent = Agent(
+    model=&#39;gemini-2.0-flash&#39;,
+    name=&#39;ConciergeAgent&#39;,
+    description=&#39;A helpful assistant for user questions.&#39;,
+    instruction=&#34;&#34;&#34;
+        あなたはユーザーの問い合わせに適切な返答を行うAIコンシェルジュです。
+
+        [ペルソナ]
+        あなたはユーザーの執事です。ユーザーのことを「ご主人様」と呼び、常に丁寧な言葉で冷静で簡潔に返答します。語尾は「デス」としてください。
+
+        [タスク]
+        - ユーザーからの挨拶に対して、心を込めて返答してください。
+        - 現在時刻に関する質問には、now_tool ツールを使用して正確に答えてください。
+        - シラバスに関する問い合わせは SyllabusAgent ツールを使用して正確に答えてください。
+        - 物語の作成に関する問い合わせは StoryFlowAgent ツールを使用して正確に答えてください。
+            - 物語を作成する際は、どのような物語を作成したいかユーザーに確認してください。
+        - 上記以外の問いかけに対しては、以下の制約に従って応答してください。
+
+        [制約]
+        - あなたが知らない、または理解できない質問については、正直に「申し訳ございません、ご主人様。その件については分かりかねます。」と答えてください。
+        - [タスク]に記載されていない役割を求められた場合は、「恐れ入りますが、ご主人様。私にはその権限がございません。」と丁寧に返答してください。
+        &#34;&#34;&#34;,
+    tools=[now_tool, AgentTool(agent=syllabus_agent), AgentTool(agent=story_agent)]
+)
+
+</code></pre>
+<h2 is-upgraded><strong>テスト1</strong></h2>
+<p>では <code>adk web</code> を実行してテストしてみましょう。</p>
+<p class="image-container"><img alt="うまく言ってる?" src="img/5c6c077c7317c34.png"></p>
+<p>うまくいっていますか...? なにか違和感ありませんか？ 上記画像の場合は <code>StoryFlowAgent</code> が本当に作成した内容でしょうか？ <code>StoryFlowAgent</code>が返却するストーリーは猫に関するストーリーのはずです。 でも返却されてた内容は猫に関する内容ではありません。</p>
+<p>ここで一度 <code>StoryFlowAgent</code> が作成したストーリーを確認してみましょう。 会話中に表示されている <code>StoryFlowAgent</code> をクリックしてみましょう。左メニュー内に、<code>StoryFlowAgent</code>が作成した<code>event</code>が表示されます。 <code>StoryFlowAgent</code>の作成したストーリーは内容が違っていそうですね。</p>
+<p class="image-container"><img alt="Event" src="img/1fe8f5ece548275b.png"></p>
+<p>なにが問題だったのでしょうか？</p>
+<h2 is-upgraded><strong>うまくいかなかった原因</strong></h2>
+<p><code>StoryFlowAgent</code>は作成したストーリーを Session State と呼ばれるオブジェクトに保存します。 ADKにおけるSession Stateは、エージェント間の会話やワークフローの進行中に、情報を共有・保持するためのメカニズムです。これは、エージェントが単一のターンで完結するのではなく、複数のターンにわたってユーザーとの対話を継続したり、複雑なタスクを段階的に処理したりする際に不可欠な要素となります。 ADKではエージェントはユーザーにコンテンツとして作成したデータを返却することもできますが、Stateにキーを指定して保存することもできます。 <code>StoryFlowAgent</code>では <code>current_story</code> と呼ばれるキーで作成した物語を保存しています。</p>
+<h2 is-upgraded><strong><code>StoryFlowAgent</code></strong><strong>の修正</strong></h2>
+<p><code>StoryFlowAgent</code>を修正して、 <code>current_story</code>から物語を取り出して、コンテンツとして返却するようにします。 ※ ここから追加と書いている部分を追加してください。</p>
+<pre><code language="language-python:concierge/sub_agents/story/agent.py" class="language-python:concierge/sub_agents/story/agent.py"># Copyright 2025 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the &#34;License&#34;);
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an &#34;AS IS&#34; BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# keisuke oohashi: 一部ハンズオン用に改変
+import logging
+from typing import AsyncGenerator
+from typing_extensions import override
+
+from google.adk.agents import LlmAgent, BaseAgent, LoopAgent, SequentialAgent
+from google.adk.agents.invocation_context import InvocationContext
+from google.genai import types
+from google.adk.sessions import InMemorySessionService
+from google.adk.runners import Runner
+from google.adk.events import Event
+from pydantic import BaseModel, Field
+
+# --- Constants ---
+GEMINI_2_FLASH = &#34;gemini-2.0-flash&#34;
+
+# --- Configure Logging ---
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+
+# --- Custom Orchestrator Agent ---
+class StoryFlowAgent(BaseAgent):
+    &#34;&#34;&#34;
+    ストーリー生成と洗練のためのカスタムエージェント。
+
+    このエージェントは、LLMエージェントのシーケンスを調整して、ストーリーを生成し、
+    批評し、修正し、文法とトーンをチェックし、もしトーンがネガティブであれば
+    ストーリーを再生成する可能性があります。
+    &#34;&#34;&#34;
+
+    # --- Field Declarations for Pydantic ---
+    # Declare the agents passed during initialization as class attributes with type hints
+    story_generator: LlmAgent
+    critic: LlmAgent
+    reviser: LlmAgent
+    grammar_check: LlmAgent
+    tone_check: LlmAgent
+
+    loop_agent: LoopAgent
+    sequential_agent: SequentialAgent
+
+    # model_config は Pydantic の設定（例: arbitrary_types_allowed）を必要に応じて設定できます。
+    # arbitrary_types_allowedはPydanticで許可されてないクラスをプロパティとして持てるようにする設定です。
+    model_config = {&#34;arbitrary_types_allowed&#34;: True}
+
+    def __init__(
+        self,
+        name: str,
+        story_generator: LlmAgent,
+        critic: LlmAgent,
+        reviser: LlmAgent,
+        grammar_check: LlmAgent,
+        tone_check: LlmAgent,
+    ):
+        &#34;&#34;&#34;
+        StoryFlowAgentを初期化します。
+
+        Args:
+            name: エージェントの名前。
+            story_generator: 初期ストーリーを生成するLlmAgent。
+            critic: ストーリーを批評するLlmAgent。
+            reviser: 批評に基づいてストーリーを修正するLlmAgent。
+            grammar_check: 文法をチェックするLlmAgent。
+            tone_check: トーンを分析するLlmAgent。
+        &#34;&#34;&#34;
+        
+        loop_agent = LoopAgent(
+            name=&#34;CriticReviserLoop&#34;, sub_agents=[critic, reviser], max_iterations=2
+        )
+        sequential_agent = SequentialAgent(
+            name=&#34;PostProcessing&#34;, sub_agents=[grammar_check, tone_check]
+        )
+
+        sub_agents_list = [
+            story_generator,
+            loop_agent,
+            sequential_agent,
+        ]
+
+        # Pydantic はクラスのアノテーションに基づいて検証し、割り当てます。
+        super().__init__(
+            name=name,
+            story_generator=story_generator,
+            critic=critic,
+            reviser=reviser,
+            grammar_check=grammar_check,
+            tone_check=tone_check,
+            loop_agent=loop_agent,
+            sequential_agent=sequential_agent,
+            sub_agents=sub_agents_list, # sub_agents リストを直接渡します
+        )
+
+    @override
+    async def _run_async_impl(
+        self, ctx: InvocationContext
+    ) -&gt; AsyncGenerator[Event, None]:
+        &#34;&#34;&#34;
+        ストーリーワークフローのカスタムオーケストレーションロジックを実装します。
+        Pydantic によって割り当てられたインスタンス属性（例: self.story_generator）を使用します。
+        &#34;&#34;&#34;
+        logger.info(f&#34;[{self.name}] ストーリー生成ワークフローを開始します。&#34;)
+
+        # 1. 初期ストーリー生成
+        logger.info(f&#34;[{self.name}] StoryGenerator を実行中...&#34;)
+        async for event in self.story_generator.run_async(ctx):
+            logger.info(f&#34;[{self.name}] StoryGenerator からのイベント: {event.model_dump_json(indent=2, exclude_none=True)}&#34;)
+            yield event
+
+        # 続行する前にストーリーが生成されたか確認
+        if &#34;current_story&#34; not in ctx.session.state or not ctx.session.state[&#34;current_story&#34;]:
+             logger.error(f&#34;[{self.name}] 初期ストーリーの生成に失敗しました。ワークフローを中断します。&#34;)
+             return # 初期ストーリーが失敗した場合、処理を停止
+
+        logger.info(f&#34;[{self.name}] ジェネレーター後のストーリーの状態: {ctx.session.state.get(&#39;current_story&#39;)}&#34;)
+
+
+        # 2. 批評家-修正者ループ
+        logger.info(f&#34;[{self.name}] CriticReviserLoop を実行中...&#34;)
+        # 初期化時に割り当てられた loop_agent インスタンス属性を使用
+        async for event in self.loop_agent.run_async(ctx):
+            logger.info(f&#34;[{self.name}] CriticReviserLoop からのイベント: {event.model_dump_json(indent=2, exclude_none=True)}&#34;)
+            yield event
+
+        logger.info(f&#34;[{self.name}] ループ後のストーリーの状態: {ctx.session.state.get(&#39;current_story&#39;)}&#34;)
+
+        # 3. 逐次後処理（文法とトーンのチェック）
+        logger.info(f&#34;[{self.name}] PostProcessing を実行中...&#34;)
+        # 初期化時に割り当てられた sequential_agent インスタンス属性を使用
+        async for event in self.sequential_agent.run_async(ctx):
+            logger.info(f&#34;[{self.name}] PostProcessing からのイベント: {event.model_dump_json(indent=2, exclude_none=True)}&#34;)
+            yield event
+
+        # 4. トーンに基づく条件ロジック
+        tone_check_result = ctx.session.state.get(&#34;tone_check_result&#34;)
+        logger.info(f&#34;[{self.name}] トーンチェック結果: {tone_check_result}&#34;)
+
+        if tone_check_result == &#34;negative&#34;:
+            logger.info(f&#34;[{self.name}] トーンがネガティブです。ストーリーを再生成します...&#34;)
+            async for event in self.story_generator.run_async(ctx):
+                logger.info(f&#34;[{self.name}] StoryGenerator からのイベント (再生成): {event.model_dump_json(indent=2, exclude_none=True)}&#34;)
+                yield event
+        else:
+            logger.info(f&#34;[{self.name}] トーンはネガティブではありません。現在のストーリーを維持します。&#34;)
+
+        #
+        # ここから追加
+        # ここから追加
+        # ここから追加
+        #
+        generated_story = ctx.session.state.get(&#39;current_story&#39;)
+        yield Event(
+            invocation_id=ctx.invocation_id,
+            content=types.Content(
+                role=&#34;model&#34;,
+                parts=[types.Part.from_text(text=generated_story)]
+            ),
+            author=ctx.agent.name
+        )
+        #
+        # ここまで追加
+        # ここまで追加
+        # ここまで追加
+        #
+
+        logger.info(f&#34;[{self.name}] ワークフローが完了しました。&#34;)
+
+# --- 個々のLLMエージェントを定義 ---
+story_generator = LlmAgent(
+    name=&#34;StoryGenerator&#34;,
+    model=GEMINI_2_FLASH,
+    instruction=&#34;&#34;&#34;あなたは物語作家です。ユーザによって提供されたトピックに基づいて、猫についての短い物語（約200語）を書いてください。&#34;&#34;&#34;,
+    input_schema=None,
+    output_key=&#34;current_story&#34;,  # Key for storing output in session state
+)
+
+critic = LlmAgent(
+    name=&#34;Critic&#34;,
+    model=GEMINI_2_FLASH,
+    instruction=&#34;&#34;&#34;あなたは物語の批評家です。Session Stateの &#39;current_story&#39; キーで提供された物語をレビューしてください。
+物語を改善する方法について、1〜2文の建設的な批判を提供してください。プロットまたはキャラクターに焦点を当ててください。&#34;&#34;&#34;,
+    input_schema=None,
+    output_key=&#34;criticism&#34;,  # Key for storing criticism in session state
+)
+
+reviser = LlmAgent(
+    name=&#34;Reviser&#34;,
+    model=GEMINI_2_FLASH,
+    instruction=&#34;&#34;&#34;あなたは物語の修正者です。Session Stateの &#39;current_story&#39; キーで提供された物語を、
+セッション状態の &#39;criticism&#39; キーにある批判に基づいて修正してください。修正された物語のみを出力してください。&#34;&#34;&#34;,
+    input_schema=None,
+    output_key=&#34;current_story&#34;,  # Overwrites the original story
+)
+
+grammar_check = LlmAgent(
+    name=&#34;GrammarCheck&#34;,
+    model=GEMINI_2_FLASH,
+    instruction=&#34;&#34;&#34;あなたは文法チェッカーです。Session Stateの &#39;current_story&#39; キーで提供された物語の文法をチェックしてください。
+提案された修正点をリストとしてのみ出力するか、エラーがない場合は「文法は良好です！」と出力してください。&#34;&#34;&#34;,
+    input_schema=None,
+    output_key=&#34;grammar_suggestions&#34;,
+)
+
+tone_check = LlmAgent(
+    name=&#34;ToneCheck&#34;,
+    model=GEMINI_2_FLASH,
+    instruction=&#34;&#34;&#34;あなたはトーンアナライザーです。Session Stateの &#39;current_story&#39; キーで提供された物語のトーンを分析してください。
+トーンが一般的にポジティブな場合は「positive」、一般的にネガティブな場合は「negative」、
+それ以外の場合は「neutral」という単語のみを出力してください。&#34;&#34;&#34;,
+    input_schema=None,
+    output_key=&#34;tone_check_result&#34;, # This agent&#39;s output determines the conditional flow
+)
+
+# --- カスタムエージェントインスタンスを作成 ---
+root_agent = StoryFlowAgent(
+    name=&#34;StoryFlowAgent&#34;,
+    story_generator=story_generator,
+    critic=critic,
+    reviser=reviser,
+    grammar_check=grammar_check,
+    tone_check=tone_check,
+)
+</code></pre>
+<p>次にコンシェルジュエージェントの<code>instruction</code>を修正します。</p>
+<pre><code language="language-python:concierge/agent.py" class="language-python:concierge/agent.py">from google.adk.agents import Agent
+from google.adk.tools.agent_tool import AgentTool
+from .tools import now_tool
+from .sub_agents.syllabus.agent import root_agent as syllabus_agent
+from .sub_agents.story.agent import root_agent as story_agent
+
+
+root_agent = Agent(
+    model=&#39;gemini-2.0-flash&#39;,
+    name=&#39;ConciergeAgent&#39;,
+    description=&#39;A helpful assistant for user questions.&#39;,
+    instruction=&#34;&#34;&#34;
+        あなたはユーザーの問い合わせに適切な返答を行うAIコンシェルジュです。
+
+        [ペルソナ]
+        あなたはユーザーの執事です。ユーザーのことを「ご主人様」と呼び、常に丁寧な言葉で冷静で簡潔に返答します。語尾は「デス」としてください。
+
+        [タスク]
+        - ユーザーからの挨拶に対して、心を込めて返答してください。
+        - 現在時刻に関する質問には、now_tool ツールを使用して正確に答えてください。
+        - シラバスに関する問い合わせは SyllabusAgent ツールを使用して正確に答えてください。
+        - 物語の作成に関する問い合わせは StoryFlowAgent ツールを使用して正確に答えてください。
+            - 物語を作成する際は、どのような物語を作成したいかユーザーに確認してください。
+            - StoryFlowAgentが作成した物語は、その内容をそのままユーザーに伝えてください。
+        - 上記以外の問いかけに対しては、以下の制約に従って応答してください。
+
+        [制約]
+        - あなたが知らない、または理解できない質問については、正直に「申し訳ございません、ご主人様。その件については分かりかねます。」と答えてください。
+        - [タスク]に記載されていない役割を求められた場合は、「恐れ入りますが、ご主人様。私にはその権限がございません。」と丁寧に返答してください。
+        &#34;&#34;&#34;,
+    tools=[now_tool, AgentTool(agent=syllabus_agent), AgentTool(agent=story_agent)]
+)
+</code></pre>
+<h2 is-upgraded><strong>テスト2</strong></h2>
+<p>では再度テストをしてみましょう。 <code>adk web</code> を実行してテストしてみましょう。 うまくいきましたか？</p>
+<p class="image-container"><img alt="コンシェルジュエージェントとストーリーエージェントの連携" src="img/e23d7481970da4a6.png"></p>
+<h2 is-upgraded><strong>Appendix1: シラバスの情報をストーリーに入れよう</strong></h2>
+<p>コンシェルジュエージェントにシラバスに関するストーリー含めたストーリーを作成する様に依頼してみてください。 多分あまり良い結果は得られないはずです。 どのエージェントでもいいのでエージェントを修正し、シラバスの内容を含めたストーリーを作成するようにしてください。</p>
+<p class="image-container"><img alt="シラバスを利用したストーリーの作成" src="img/e092d334ab1eae08.png"></p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="デプロイ" duration="15">
+        <p>最後に、開発したAIエージェントのチームを、世界中の誰もがアクセスできるWebアプリケーションとしてCloud Runにデプロイします。</p>
+<h2 is-upgraded><strong>Cloud Run とは</strong></h2>
+<p>Cloud Run は、Google Cloud が提供するフルマネージドのサーバーレスプラットフォームです。コンテナ化されたアプリケーションを、インフラストラクチャの管理なしで実行できます。Web アプリケーション、API サービス、バックエンド処理など、様々な用途に利用できます。</p>
+<p><strong>Cloud Run の主な特徴:</strong></p>
+<ul>
+<li><strong>フルマネージド:</strong> サーバーのプロビジョニング、パッチ適用、スケーリングといったインフラ管理はすべて Google Cloud が行います。開発者はコードの記述に集中できます。</li>
+<li><strong>サーバーレス:</strong> リクエストがないときはインスタンスがゼロにスケールダウンするため、アイドル状態のコストがかかりません。リクエストに応じて自動的にスケールアップ・ダウンします。</li>
+<li><strong>コンテナベース:</strong> 任意の言語で書かれたアプリケーションをコンテナイメージとしてデプロイできます。これにより、開発環境と本番環境の差異をなくし、移植性を高めます。</li>
+<li><strong>イベント駆動型:</strong> HTTP リクエストだけでなく、Cloud Pub/Sub メッセージ、Cloud Storage イベントなど、様々なイベントをトリガーとしてアプリケーションを実行できます。</li>
+<li><strong>従量課金:</strong> 使用したリソース（CPU、メモリ、リクエスト数など）に対してのみ課金されます。</li>
+</ul>
+<p>ADKでは特にコンテナイメージを用意することなく、CLIから簡単にCloud Runへエージェントをデプロイすることができます。</p>
+<h2 is-upgraded><strong>Cloud Run へのデプロイ</strong></h2>
+<p>ADKには、デプロイを簡単に行うためのコマンドが用意されています。以下のコマンドを実行するだけで、コンテナのビルドからデプロイまでが自動的に行われます。</p>
+<pre>export GOOGLE_CLOUD_PROJECT={your project id here}
+export GOOGLE_CLOUD_LOCATION=asia-northeast1
+adk deploy cloud_run \
+    --project=$GOOGLE_CLOUD_PROJECT \
+    --region=$GOOGLE_CLOUD_LOCATION \
+    --service_name=adk-codelab-service \
+    --app_name=concierge \
+    --with_ui \
+    .
+</pre>
+<p>途中で以下のように、未認証でのアクセス許可を聞かれるので、<code>y</code>をタイプして、エンターキーを押下してください。</p>
+<pre>Allow unauthenticated invocations to [adk-codelab-service] (y/N)?  
+</pre>
+<p>デプロイが完了するとURLが表示されるので、アクセスして最終的な動作確認を行いましょう。</p>
+<h2 is-upgraded><strong>Agent Engine とは</strong></h2>
+<p>Agent Engine は、Google Cloud が提供する、AI エージェントのデプロイと管理に特化したプラットフォームです。ADK で開発されたエージェントを、スケーラブルで信頼性の高い環境で実行するために設計されています。Cloud Run が汎用的なコンテナ実行環境であるのに対し、Agent Engine はエージェントのライフサイクル管理、バージョン管理、モニタリングなど、エージェント特有のニーズに対応した機能を提供します。</p>
+<p><strong>Agent Engine の主な特徴:</strong></p>
+<ul>
+<li><strong>エージェントに特化:</strong> ADK で構築されたエージェントを最適に実行するための環境を提供します。</li>
+<li><strong>ライフサイクル管理:</strong> エージェントのデプロイ、更新、ロールバックなどを容易に行えます。</li>
+<li><strong>バージョン管理:</strong> エージェントの複数のバージョンを管理し、A/B テストや段階的なロールアウトをサポートします。</li>
+<li><strong>組み込みのモニタリング:</strong> エージェントのパフォーマンスや動作状況を監視するためのツールが統合されています。</li>
+<li><strong>セキュリティとアクセス制御:</strong> エージェントへのアクセスを細かく制御し、セキュアな運用を可能にします。</li>
+</ul>
+<p>Agent Engineはエージェントに必要なSession/Eventの保存/管理、メモリー機能の提供などよりエージェントに特化した機能を多数持っています。</p>
+<h2 is-upgraded><strong>Agent Engine へのデプロイ</strong></h2>
+<p>Agent Engineへのデプロイは通常Pythonファイルを作成して行います。</p>
+<aside class="warning"><p><strong>補足: </strong><strong><code>adk deploy agent_engine</code></strong><strong> コマンド</strong></p>
+<p>現在ドキュメントには記載されていませんが、adk cliに<code>adk deploy agent_engine</code>というagnet engineへデプロイするコマンドが用意されています。ただ、現在(2025年7月時点)はバグが有るようで正常に動作しません。 近い内に今回の方法ではないデプロイ方法が用意されるようになるはずなので、軽く覚えておいてください。</p>
+</aside>
+<p>Agent Engineへデプロイするためにはまずソースコードを置くためのGoogle Cloud Storage(GCS) バケットが必要です。 以下のコマンドでGCSバケットを作成しましょう。</p>
+<pre>export GOOGLE_CLOUD_PROJECT={your project id here}
+gcloud storage buckets create &#34;gs://${GOOGLE_CLOUD_PROJECT}-agent-engine-bucket&#34; --location=asia-northeast1 --project=${GOOGLE_CLOUD_PROJECT}
+</pre>
+<p>次にデプロイ用のライブラリを追加します。</p>
+<pre>uv add &#34;google-cloud-aiplatform[adk,agent_engines]&#34;
+</pre>
+<p>次にデプロイ用のpythonスクリプトを作成します。</p>
+<pre><code language="language-python:deploy_agentengine.py" class="language-python:deploy_agentengine.py">import json
+import os
+
+import vertexai
+from vertexai import agent_engines
+
+
+vertexai.init(project=os.environ.get(&#34;GOOGLE_CLOUD_PROJECT&#34;), location=os.environ.get(&#34;GOOGLE_CLOUD_LOCATION&#34;), staging_bucket=os.environ.get(&#34;STAGING_BUCKET&#34;))
+
+SETTING_FILENAME = &#34;.agentengine.json&#34;
+
+def deploy_agentengine():
+    from concierge.agent import root_agent
+
+    packages = [&#34;concierge&#34;]
+
+    requirements = [
+        &#34;google-adk&gt;=1.5.0&#34;,
+        &#34;llama-index&gt;=0.12.46&#34;,
+        &#34;google-cloud-aiplatform[adk,agent-engines]&gt;=1.101.0&#34;,
+        &#34;google-cloud-aiplatform[evaluation]&gt;=1.101.0&#34;,
+
+    ]
+    display_name = &#34;ConciergeAgent&#34;
+
+    if os.path.isfile(SETTING_FILENAME):
+        print(&#34;setting file found&#34;)
+
+        with open(SETTING_FILENAME, mode=&#34;r&#34;) as fp:
+            settings = json.load(fp)
+            agent_engine_id = settings[&#34;agent_engine_id&#34;]
+            agent_engine = agent_engines.get(agent_engine_id)
+            print(f&#34;start updating {agent_engine_id}&#34;)
+            agent_engine.update(agent_engine=root_agent, display_name=display_name, requirements=requirements, extra_packages=packages)
+        return
+
+    print(&#34;setting file not found&#34;)
+    print(&#34;create new agent engine instance&#34;)
+    agent_engine = agent_engines.create(agent_engine=root_agent, display_name=display_name, requirements=requirements, extra_packages=packages)
+    print(f&#34;Done creating new agent engine instance. resource name: {agent_engine.resource_name}&#34;)
+    with open(SETTING_FILENAME, mode=&#34;w&#34;) as fp:
+        print(f&#34;Create setting file to {fp.name}&#34;)
+        json.dump(
+            {
+                &#34;agent_engine_id&#34;: agent_engine.resource_name,
+            },
+            fp,
+        )
+
+
+if __name__ == &#34;__main__&#34;:
+    deploy_agentengine()
+
+</code></pre>
+<p>では実際にデプロイしてみましょう。</p>
+<pre>export GOOGLE_CLOUD_PROJECT={your project id here}
+export GOOGLE_CLOUD_LOCATION=us-central1
+export STAGING_BUCKET=gs://${GOOGLE_CLOUD_PROJECT}-agent-engine-bucket
+uv run deploy_agentengine.py
+</pre>
+<p>※ <code>GOOGLE_CLOUD_LOCATION</code>を<code>us-central1</code>にするのは<code>asia-northeast1</code>では扱えないモデルが存在するからです。</p>
+<h2 is-upgraded><strong>Agent Engine の実行方法</strong></h2>
+<p>Agent Engineにデプロイされたエージェントは、REST APIを通じて利用できます。ここでは、Pythonクライアントライブラリと<code>curl</code>コマンドを使った実行方法を説明します。</p>
+<h3 is-upgraded><strong>Pythonクライアントライブラリでの実行</strong></h3>
+<p>PythonでAgent Engineにデプロイしたエージェントを実行するには、<code>vertexai.agent_engines</code>モジュールを使用します。</p>
+<pre><code language="language-python:run_agentengine.py" class="language-python:run_agentengine.py">import os
+import vertexai
+from vertexai import agent_engines
+import json
+
+# 環境変数を設定
+# GOOGLE_CLOUD_PROJECTとGOOGLE_CLOUD_LOCATIONはデプロイ時と同じものを設定
+vertexai.init(project=os.environ.get(&#34;GOOGLE_CLOUD_PROJECT&#34;), location=os.environ.get(&#34;GOOGLE_CLOUD_LOCATION&#34;))
+
+
+# ダミーのユーザーIDを設定
+user_id = &#34;dummy&#34;
+
+# デプロイ時に保存された .agentengine.json から agent_engine_id を読み込む
+SETTING_FILENAME = &#34;.agentengine.json&#34;
+agent_engine_id = &#34;&#34;
+if os.path.isfile(SETTING_FILENAME):
+    with open(SETTING_FILENAME, mode=&#34;r&#34;) as fp:
+        settings = json.load(fp)
+        agent_engine_id = settings[&#34;agent_engine_id&#34;]
+else:
+    print(f&#34;Error: {SETTING_FILENAME} not found. Please deploy the agent first.&#34;)
+    exit()
+
+# Agent Engineインスタンスを取得
+agent_engine = agent_engines.get(agent_engine_id)
+
+def run_query(user_message):
+    for e in agent_engine.stream_query(user_id=user_id, message=user_message):
+        print(f&#34;Agent Response: {e}&#34;)
+    
+
+
+print(agent_engine)
+# エージェントを実行
+# ユーザーからの入力メッセージ
+run_query(&#34;こんにちは&#34;)
+
+run_query(&#34;今日の東京の天気は？&#34;)
+
+run_query(&#34;シラバスで「AI」について教えて&#34;)
+
+run_query(&#34;猫と宇宙をテーマに物語を書いて&#34;)
+</code></pre>
+<p>上記のコードを <code>run_agentengine.py</code> として保存し、以下のコマンドで実行してください。</p>
+<pre>uv run run_agentengine.py
+</pre>
+<h3 is-upgraded><strong>curl での実行</strong></h3>
+<p>次に、Agent EngineのAPIエンドポイントとエージェントのIDが必要です。 エージェントのIDは、<code>deploy_agentengine.py</code>を実行した際に表示される<code>resource name</code>、または<code>.agentengine.json</code>ファイルに保存されている<code>agent_engine_id</code>です。</p>
+<pre>cat .agentengine.json
+</pre>
+<p>表示された<code>agent_engine_id</code>を利用して環境変数を設定します。</p>
+<pre>export AGENT_ENGINE_ID=&#34;agent engine id is here&#34;
+export PROJECT_ID=$(echo $AGENT_ENGINE_ID | cut -d&#39;/&#39; -f2)
+export LOCATION=$(echo $AGENT_ENGINE_ID | cut -d&#39;/&#39; -f4)
+export AGENT_ID=$(echo $AGENT_ENGINE_ID | cut -d&#39;/&#39; -f6)
+
+export ENDPOINT=&#34;https://${LOCATION}-aiplatform.googleapis.com/v1/${AGENT_ENGINE_ID}:streamQuery?alt=sse&#34;
+</pre>
+<p>これで<code>curl</code>コマンドでエージェントを呼び出す準備ができました。 以下のコマンドでテストを行ってください。</p>
+<pre>curl -X POST -H &#34;Authorization: Bearer $(gcloud auth print-access-token)&#34; \
+     -H &#34;Content-Type: application/json&#34; \
+     -d &#39;{
+       &#34;class_method&#34;: &#34;stream_query&#34;,
+       &#34;input&#34;: {&#34;message&#34;:&#34;こんにちは&#34;, &#34;user_id&#34;: &#34;dummy&#34;}
+     }&#39; \
+     &#34;${ENDPOINT}&#34;
+</pre>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="クリーンアップ" duration="0">
+        <p>最後にプロジェクトのクリーンアップを行います。 今回はプロジェクトごと削除します。このあとも勉強のためなどに残す方は、自己責任でご対応ください。</p>
+<p>Google Cloud プロジェクトを削除するには、以下の手順を実行します。</p>
+<ol type="1">
+<li><strong>Google Cloud コンソールにアクセスします。</strong> ウェブブラウザで <a href="https://console.cloud.google.com/" target="_blank">https://console.cloud.google.com/</a> にアクセスし、ハンズオンで使用したプロジェクトを選択します。</li>
+<li><strong>プロジェクト設定に移動します。</strong> 左側のナビゲーションメニューから「IAM と管理」を選択し、次に「設定」を選択します。</li>
+<li><strong>プロジェクトをシャットダウンします。</strong> 「プロジェクトのシャットダウン」ボタンをクリックします。</li>
+<li><strong>プロジェクト ID を入力して確認します。</strong> 表示されるダイアログで、プロジェクト ID を正確に入力し、「シャットダウン」をクリックして削除を確定します。</li>
+</ol>
+<p>プロジェクトはすぐにシャットダウンプロセスに入り、通常は数日以内に完全に削除されます。この期間中、プロジェクトは復元可能です。</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="まとめ" duration="0">
+        <p>お疲れ様でした！このハンズオンでは、ADKとGoogle Cloudを用いて、アイデアを形にするAIエージェント開発の一連のプロセスを体験しました。 改めて作成したAIエージェントの構成図を見てみましょう。</p>
+<p class="image-container"><img alt="今回開発したAIエージェントの構成図" src="img/cff165a6835ac14e.png"></p>
+<p>AIエージェントの作成方法はイメージできたでしょうか？ ここで学んだ知識を活かして、ぜひあなた自身のオリジナルAIエージェント開発に挑戦してみてください！</p>
+
+
+      </google-codelab-step>
+    
+  </google-codelab>
+
+  <script src="https://storage.googleapis.com/claat-public/native-shim.js"></script>
+  <script src="https://storage.googleapis.com/claat-public/custom-elements.min.js"></script>
+  <script src="https://storage.googleapis.com/claat-public/prettify.js"></script>
+  <script src="https://storage.googleapis.com/claat-public/codelab-elements.js"></script>
+  <script src="//support.google.com/inapp/api.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,17 @@
+{
+  "environment": "web",
+  "format": "html",
+  "prefix": "https://storage.googleapis.com",
+  "mainga": "UA-49880327-14",
+  "updated": "2025-07-07T22:30:29+09:00",
+  "id": "build-with-ai-adk-codelab-ja",
+  "duration": 140,
+  "title": "Build with AI Agent Development Kit ハンズオンへようこそ！",
+  "summary": "このハンズオンでは、GoogleのAgent Development Kit (ADK) とGoogle Cloudの強力なサービス群を連携させ、実践的なAIエージェントを構築する方法を学びます。具体的には、ユーザーとの対話や情報検索、複雑なタスクの自動化を実現するAIエージェントをステップバイステップで開発し、最終的にCloud Runへデプロイするまでを体験します。",
+  "source": "./codelab.md",
+  "theme": "",
+  "status": null,
+  "category": null,
+  "tags": [],
+  "url": "build-with-ai-adk-codelab-ja"
+}
