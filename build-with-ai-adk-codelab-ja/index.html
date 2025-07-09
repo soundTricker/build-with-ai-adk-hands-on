@@ -321,7 +321,8 @@ root_agent = Agent(
 <li>仮想のThinkingを行うようにプロンプトを調整する</li>
 </ol>
 <p>といった対応が必要になります。</p>
-<p>&#34;1.&#34;は model部分をgemini-2.5-flashに変えていただくことで、確かめることができます。(少しトークン単価が高くなるので、クーポンの利用を超えてしまうかもしれません。) &#34;2.&#34;は ADKの機能で補助することが可能で、Agentの引数<code>planner</code>に<code>google.adk.planners.plan_re_act_planner.PlanReActPlanner</code>を設定することで自動で行ってくれます。 <code>google.adk.planners.plan_re_act_planner.PlanReActPlanner</code>はLLMのレスポンスに一度「計画や予測、アクションなど(PLANNING/REASONING/ACTION/FINAL_ANSWER)」を自身で返答させることで擬似的なplan thinkingをさせる機能です。 LLMからの返答が少し変わりますが、toolの利用や、計画の精度が上がります。是非色々試してみてください。 なお別のアプローチとして、 gemini-2.0-flash の時点ではまだあまり日本語が得意ではなかったため、英語でinstructionを記載したほうが、精度が高くなる可能性があります。 AIモデルのClaudeシリーズを公開しているAnthoropicも「Think Tool」と呼ばれるLLMに「途中の思考内容をレスポンスに書き出すツール」を使用させることで思考の精度が上がったという論文もありますので、様々な手法で試してみてください。 https://www.anthropic.com/engineering/claude-think-tool</p>
+<p>&#34;1.&#34;は model部分をgemini-2.5-flashに変えていただくことで、確かめることができます。(少しトークン単価が高くなるので、クーポンの利用を超えてしまうかもしれません。)</p>
+<p>&#34;2.&#34;は ADKの機能で補助することが可能で、Agentの引数<code>planner</code>に<code>google.adk.planners.plan_re_act_planner.PlanReActPlanner</code>を設定することで自動で行ってくれます。 <code>google.adk.planners.plan_re_act_planner.PlanReActPlanner</code>はLLMのレスポンスに一度「計画や予測、アクションなど(PLANNING/REASONING/ACTION/FINAL_ANSWER)」を自身で返答させることで擬似的なplan thinkingをさせる機能です。 LLMからの返答が少し変わりますが、toolの利用や、計画の精度が上がります。是非色々試してみてください。 なお別のアプローチとして、 gemini-2.0-flash の時点ではまだあまり日本語が得意ではなかったため、英語でinstructionを記載したほうが、精度が高くなる可能性があります。 AIモデルのClaudeシリーズを公開しているAnthoropicも「Think Tool」と呼ばれるLLMに「途中の思考内容をレスポンスに書き出すツール」を使用させることで思考の精度が上がったという論文もありますので、様々な手法で試してみてください。 https://www.anthropic.com/engineering/claude-think-tool</p>
 </aside>
 <h2 is-upgraded><strong>Appendix1. 様々なツール</strong></h2>
 <p><code>now_tool</code>は引数が無いツールでした。次は以下のような地域を指定したらテスト用の天気を返すツールを作ってテストしてみましょう。コンシェルジュエージェントの指示は自分で書いてみてください。</p>
