@@ -24,7 +24,7 @@ Duration: 5
 本ハンズオンでは、以下の3種類の個性的なAIエージェントを開発します。
 
 *   **StoryFlowAgent:** ユーザーから与えられたテーマやキーワードを基に、オリジナルの短い物語を創作します。創造的なタスクをこなすエージェントの一例です。
-*   **SyllabusAgent:** 大学のシラバス情報をPDFから読み込み、RAG (Retrieval-Augmented Generation) 技術を用いて、学生からの質問に的確に回答します。専門的な知識ベースを活用するエージェントです。
+*   **SyllabusAgent:** 大学のシラバス情報をPDFから読み込み、RAG (Retrieval-Augmented Generation) 技術を用いて、学生からの質問に的確に回答します。専門的な知識ベースを活用するエージェントです。学生課みたいな立ち位置です。
 *   **ConciergeAgent:** ユーザーからの様々なリクエストを受け付け、その内容を判断し、上記の `StoryFlowAgent` や `SyllabusAgent` へと適切にタスクを振り分ける司令塔の役割を担います。
 
 ### **学習内容**
@@ -364,6 +364,27 @@ root_agent = Agent(
 
 > aside negative
 > うまくエージェントが更新されていない場合は一度 `adk web`を `Ctrl + C`などで停止し、再起動してください。
+
+> aside positive
+> **コラム: ThinkingとPlannnerとFunction Calling**
+>
+> 現在のエージェントでは gemini-2.0-flashモデルを利用しています。
+> このモデルにした理由は比較的安くて、回答が速いことが理由です。
+> ただ時々 ツールを呼び出した「ふり」をすることがあります。
+> これはツールの呼び出しにはある程度「ツールを呼び出すための多段な計画」を行う必要があり、計画を行うためには「Thinking(思考)」プロセスが必要なためです。
+> gemini-2.0-flashモデルではこの「Thinking」機能が搭載されておらず、計画をうまく立てることができずに自身の知識内でツールを呼び出したふりをして嘘の回答を行ってしまう「ハルシネーション」が発生します。
+> これを解消するには
+> 1. Thinkingに対応しているモデル(gemini-2.5以降のモデル)を利用する
+> 2. 仮想のThinkingを行うようにプロンプトを調整する
+> といった対応が必要になります。
+>
+> 1. は model部分をgemini-2.5-flashに変えていただくことで、確かめることができます。(少しトークン単価が高くなるので、クーポンの利用を超えてしまうかもしれません。)
+> 2. は ADKの機能で補助することが可能で、Agentの引数`planner`に`google.adk.planners.plan_re_act_planner.PlanReActPlanner`を設定することで自動で行ってくれます。
+> `google.adk.planners.plan_re_act_planner.PlanReActPlanner`はLLMのレスポンスに一度「計画や予測、アクションなど(PLANNING/REASONING/ACTION/FINAL_ANSWER)」を自身で返答させることで擬似的なplan thinkingをさせる機能です。
+> LLMからの返答が少し変わりますが、toolの利用や、計画の精度が上がります。是非色々試してみてください。
+> なお別のアプローチとして、 gemini-2.0-flash の時点ではまだあまり日本語が得意ではなかったため、英語でinstructionを記載したほうが、精度が高くなる可能性があります。
+> AIモデルのClaudeシリーズを公開しているAnthoropicも「Think Tool」と呼ばれるLLMに「途中の思考内容をレスポンスに書き出すツール」を使用させることで思考の精度が上がったという論文もありますので、様々な手法で試してみてください。
+> https://www.anthropic.com/engineering/claude-think-tool
 
 ### **Appendix1. 様々なツール**
 
