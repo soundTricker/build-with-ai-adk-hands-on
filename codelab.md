@@ -383,6 +383,7 @@ root_agent = Agent(
 > といった対応が必要になります。
 >
 > "1."は model部分をgemini-2.5-flashに変えていただくことで、確かめることができます。(少しトークン単価が高くなるので、クーポンの利用を超えてしまうかもしれません。)
+>
 > "2."は ADKの機能で補助することが可能で、Agentの引数`planner`に`google.adk.planners.plan_re_act_planner.PlanReActPlanner`を設定することで自動で行ってくれます。
 > `google.adk.planners.plan_re_act_planner.PlanReActPlanner`はLLMのレスポンスに一度「計画や予測、アクションなど(PLANNING/REASONING/ACTION/FINAL_ANSWER)」を自身で返答させることで擬似的なplan thinkingをさせる機能です。
 > LLMからの返答が少し変わりますが、toolの利用や、計画の精度が上がります。是非色々試してみてください。
